@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --color-oxblood: #7f1118;
+  --color-oxblood-deep: #560a0f;
+  --color-crimson: #dc1e26;
+  --color-crimson-hover: #b9161d;
+
+  --color-obsidian: #0a0a0c;
+  --color-iron: #141418;
+  --color-steel: #27272a;
+  --color-chrome: #a1a1aa;
+  --color-silver: #d4d4d8;
+  --color-chalk: #fafafa;
+
+  --color-access-ok: #10b981;
+  --color-access-warn: #f59e0b;
+  --color-access-denied: #ff2a3b;
+
+  --font-display: var(--font-barlow-condensed), "Oswald", sans-serif;
+  --font-sans: var(--font-plus-jakarta), var(--font-noto-bengali), "Inter", sans-serif;
+}
+
+body {
+  background-color: #0a0a0c;
+  color: #fafafa;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.va-card {
+  background-color: #141418;
+  border: 1px solid #27272a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.va-hero-gradient {
+  background: radial-gradient(circle at top right, #7f1118 0%, #141418 55%, #0a0a0c 100%);
+}

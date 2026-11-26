@@ -1,0 +1,83 @@
+name: CI Quality & Security Gate
+
+on:
+  pull_request:
+    branches: [dev, staging, main]
+  push:
+    branches: [main]
+
+jobs:
+  secret-scan:
+    name: Gitleaks Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  verify-and-build:
+    name: Prisma, Lint, Security Tests & Production Builds
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: vintage_ci
+          POSTGRES_PASSWORD: vintage_ci_password
+          POSTGRES_DB: vintage_ci_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U vintage_ci -d vintage_ci_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://vintage_ci:vintage_ci_password@localhost:5432/vintage_ci_db?sslmode=disable
+      DIRECT_URL: postgresql://vintage_ci:vintage_ci_password@localhost:5432/vintage_ci_db?sslmode=disable
+      NODE_ENV: test
+      JWT_ACCESS_SECRET: ci-test-access-secret-placeholder-32-chars-min
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-placeholder-32-chars-min
+      DATA_ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+      QR_HMAC_SECRET: ci-test-qr-secret-placeholder-32-chars-min
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Dependencies (No Lifecycle Scripts)
+        run: npm ci --ignore-scripts
+
+      - name: Dependency Security Audit
+        run: npm audit --audit-level=high
+
+      - name: Validate Prisma Schema
+        run: npx prisma validate
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Deploy Migrations to Ephemeral pgvector PostgreSQL
+        run: npx prisma migrate deploy
+
+      - name: Verify Idempotent Database Seed
+        run: |
+          npx prisma db seed
+          npx prisma db seed
+
+      - name: Lint & Typecheck Workspaces
+        run: npm run lint
+
+      - name: Run Unit & Security Tests
+        run: npm run test
+
+      - name: Production Build (Shared, NestJS API & Next.js PWA)
+        run: npm run build

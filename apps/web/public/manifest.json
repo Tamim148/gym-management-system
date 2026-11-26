@@ -1,0 +1,16 @@
+{
+  "name": "Vintage Aesthetics Gym",
+  "short_name": "VA Gym",
+  "description": "Multi-branch fitness ecosystem for Gulshan-1, Dhanmondi, and Uttara.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0C",
+  "theme_color": "#7F1118",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ]
+}

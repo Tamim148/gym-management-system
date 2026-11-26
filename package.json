@@ -1,0 +1,38 @@
+{
+  "name": "vintage-aesthetics-gym",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "scripts": {
+    "build:shared": "npm run build --workspace=@vintage/shared",
+    "build:api": "npm run build:shared && npm run build --workspace=@vintage/api",
+    "build:web": "npm run build:shared && npm run build --workspace=@vintage/web",
+    "build": "npm run build:shared && npm run build --workspace=@vintage/api && npm run build --workspace=@vintage/web",
+    "start:prod": "npm run start:prod --workspace=@vintage/api",
+    "lint": "npm run build:shared && npm run lint --workspace=@vintage/shared && npm run lint --workspace=@vintage/api && npm run lint --workspace=@vintage/web",
+    "test": "npm run test --workspace=@vintage/api",
+    "dev:api": "npm run dev --workspace=@vintage/api",
+    "dev:web": "npm run dev --workspace=@vintage/web",
+    "prisma:validate": "prisma validate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:seed": "prisma db seed"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.13.0",
+    "prisma": "^6.6.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.2"
+  }
+}

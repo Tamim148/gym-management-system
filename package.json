@@ -17,6 +17,7 @@
     "start:prod": "npm run start:prod --workspace=@vintage/api",
     "lint": "npm run build:shared && npm run lint --workspace=@vintage/shared && npm run lint --workspace=@vintage/api && npm run lint --workspace=@vintage/web",
     "test": "npm run test --workspace=@vintage/api",
+    "test:all": "npm run test --workspace=@vintage/api && npm run test:e2e --workspace=@vintage/api",
     "dev:api": "npm run dev --workspace=@vintage/api",
     "dev:web": "npm run dev --workspace=@vintage/web",
     "prisma:validate": "prisma validate",
@@ -29,6 +30,7 @@
     "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.13.0",
     "prisma": "^6.6.0",

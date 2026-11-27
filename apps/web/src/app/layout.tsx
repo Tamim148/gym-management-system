@@ -4,6 +4,8 @@ import {
   Noto_Sans_Bengali,
   Plus_Jakarta_Sans,
 } from 'next/font/google';
+import { AiConciergeWidget } from '@/components/ai-concierge/AiConciergeWidget';
+import { SwRegister } from '@/components/layout/SwRegister';
 import './globals.css';
 
 const barlowCondensed = Barlow_Condensed({
@@ -46,7 +48,9 @@ export default function RootLayout({
       className={`${barlowCondensed.variable} ${plusJakarta.variable} ${notoBengali.variable}`}
     >
       <body className="min-h-screen bg-obsidian text-chalk antialiased">
+        <SwRegister />
         {children}
+        <AiConciergeWidget />
       </body>
     </html>
   );

@@ -1,12 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import QRCode from 'qrcode';
 import { RefreshCw, ShieldCheck, WifiOff } from 'lucide-react';
 import { BUSINESS_RULES, type QrPassPayload } from '@vintage/shared';
 import { apiGet } from '@/lib/api';
 import { cacheQrPass, getCachedQrPass } from '@/lib/offline-store';
+import { BrandCrest } from '@/components/ui/BrandCrest';
 
 interface MetallicQrPassCardProps {
   userId: string;
@@ -100,33 +100,27 @@ export function MetallicQrPassCard({
   }, [payload?.expiresAt, loadQrPass]);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-chrome/40 bg-gradient-to-br from-[#1C1C22] via-[#121216] to-oxblood-deep p-5 text-chalk shadow-[0_20px_50px_rgba(0,0,0,0.65)]">
-      {/* Brushed Chrome Metallic Sheen */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_45%)]" />
+    <div className="relative overflow-hidden rounded-2xl border border-silver/35 bg-linear-to-br from-[#1B1B20] via-iron to-oxblood-deep text-chalk shadow-2xl">
+      {/* 1px Crimson LED Strip */}
+      <div className="va-led-rule w-full" />
 
-      <div className="relative z-10 space-y-4">
+      <div className="space-y-4 p-5">
         {/* Card Header */}
         <div className="flex items-center justify-between gap-3 border-b border-white/15 pb-3">
           <div className="flex items-center gap-3">
-            <Image
-              src="/images/logo.png"
-              alt="Vintage Aesthetics VIP Crest"
-              width={42}
-              height={42}
-              className="rounded-full border border-chrome/50 bg-obsidian p-0.5"
-            />
+            <BrandCrest size={42} alt="Vintage Aesthetics VIP Crest" />
             <div>
               <p className="font-display text-lg font-extrabold uppercase tracking-wider text-chalk">
                 Vintage Aesthetics
               </p>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-silver/80">
+              <p className="text-[11px] font-semibold text-silver/80">
                 {planName}
               </p>
             </div>
           </div>
 
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase ${
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
               isOfflineCached
                 ? 'border-amber-400/50 bg-amber-500/20 text-amber-300'
                 : 'border-emerald-400/40 bg-emerald-500/15 text-emerald-300'
@@ -134,12 +128,12 @@ export function MetallicQrPassCard({
           >
             {isOfflineCached ? (
               <>
-                <WifiOff className="h-3.5 w-3.5" />
+                <WifiOff className="h-3.5 w-3.5" strokeWidth={1.75} />
                 Offline Cached
               </>
             ) : (
               <>
-                <ShieldCheck className="h-3.5 w-3.5" />
+                <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
                 Live Token
               </>
             )}
@@ -148,7 +142,7 @@ export function MetallicQrPassCard({
 
         {/* QR Code Surface */}
         <div className="flex flex-col items-center justify-center gap-3 py-2">
-          <div className="rounded-2xl border-2 border-chrome/50 bg-chalk p-3 shadow-inner">
+          <div className="rounded-2xl border-2 border-silver/50 bg-chalk p-3 shadow-inner">
             {loading && !payload ? (
               <div className="flex h-[180px] w-[180px] items-center justify-center bg-zinc-200 text-xs font-bold text-zinc-700">
                 Generating QR...
@@ -167,7 +161,7 @@ export function MetallicQrPassCard({
           </div>
 
           {payload?.token ? (
-            <p className="max-w-full truncate rounded-md bg-black/40 px-2.5 py-1 font-mono text-[11px] text-silver/90">
+            <p className="max-w-full truncate rounded-md border border-white/10 bg-obsidian/70 px-2.5 py-1 font-mono text-[11px] text-silver/90">
               {payload.token}
             </p>
           ) : null}
@@ -183,8 +177,8 @@ export function MetallicQrPassCard({
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="rounded-xl border border-white/15 bg-black/40 px-3 py-1.5 text-center">
-              <p className="text-[10px] uppercase tracking-wider text-chrome">Rotates In</p>
+            <div className="rounded-xl border border-white/15 bg-obsidian/70 px-3 py-1.5 text-center tabular-nums">
+              <p className="text-[10px] font-semibold text-chrome">Rotates In</p>
               <p className="font-display text-lg font-extrabold text-chalk">
                 {secondsLeft}s
               </p>
@@ -193,9 +187,9 @@ export function MetallicQrPassCard({
               type="button"
               onClick={() => void loadQrPass()}
               aria-label="Refresh QR Pass"
-              className="flex h-12 w-12 items-center justify-center rounded-xl border border-chrome/40 bg-obsidian/70 text-chalk transition-colors hover:bg-crimson"
+              className="flex h-12 w-12 items-center justify-center rounded-xl border border-silver/40 bg-obsidian text-chalk transition-colors hover:border-crimson hover:bg-crimson"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.75} />
             </button>
           </div>
         </div>

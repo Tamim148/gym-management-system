@@ -1,43 +1,125 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from 'react';
+import { Suspense, useEffect, useRef, useState, type FormEvent, type PointerEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   AlertCircle,
   ArrowLeft,
-  ArrowRight,
+  Check,
   CheckCircle2,
   Eraser,
   HeartPulse,
   Inbox,
+  KeyRound,
   ShieldCheck,
-  Sparkles,
+  WifiOff,
 } from 'lucide-react';
-import type { AuthSessionResponse, RegisterDto, VerifyOtpDto } from '@vintage/shared';
+import {
+  BRANCH_CODES,
+  BillingCycle,
+  type AuthSessionResponse,
+  type RegisterDto,
+  type VerifyOtpDto,
+} from '@vintage/shared';
 import { ApiError, apiGet, apiPost } from '@/lib/api';
 import { formatBdt } from '@/lib/dal';
 import type { BranchItem, MembershipPlanItem } from '@/lib/types';
 import { MockCheckoutModal } from '@/components/billing/MockCheckoutModal';
+import { BrandCrest } from '@/components/ui/BrandCrest';
 
 type OnboardStep = 1 | 2 | 3 | 4;
 
-export default function OnboardPage() {
+const FALLBACK_BRANCHES: BranchItem[] = [
+  {
+    id: '10000000-0000-4000-8000-000000000001',
+    code: BRANCH_CODES.GULSHAN,
+    name: 'Gulshan-1 Flagship',
+    address: 'Road 12, Gulshan-1, Dhaka 1212',
+    maxOccupancy: 80,
+    currentOccupancy: 34,
+    edgeNodeOnline: true,
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000002',
+    code: BRANCH_CODES.DHANMONDI,
+    name: 'Dhanmondi Iron Club',
+    address: 'Satmasjid Road, Dhanmondi 27, Dhaka 1209',
+    maxOccupancy: 70,
+    currentOccupancy: 28,
+    edgeNodeOnline: true,
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000003',
+    code: BRANCH_CODES.UTTARA,
+    name: 'Uttara Sector-7 Studio',
+    address: 'Road 18, Sector 7, Uttara, Dhaka 1230',
+    maxOccupancy: 60,
+    currentOccupancy: 19,
+    edgeNodeOnline: true,
+  },
+];
+
+const FALLBACK_PLANS: MembershipPlanItem[] = [
+  {
+    id: '20000000-0000-4000-8000-000000000001',
+    name: 'Off-Peak Iron (1 PM–3 PM)',
+    billingCycle: BillingCycle.MONTHLY,
+    priceBdt: 2500,
+    durationDays: 30,
+    roamingEnabled: false,
+    offPeakOnly: true,
+  },
+  {
+    id: '20000000-0000-4000-8000-000000000002',
+    name: 'Monthly Home Club',
+    billingCycle: BillingCycle.MONTHLY,
+    priceBdt: 3500,
+    durationDays: 30,
+    roamingEnabled: false,
+    offPeakOnly: false,
+  },
+  {
+    id: '20000000-0000-4000-8000-000000000003',
+    name: 'Quarterly Iron Standard',
+    billingCycle: BillingCycle.QUARTERLY,
+    priceBdt: 9500,
+    durationDays: 90,
+    roamingEnabled: false,
+    offPeakOnly: false,
+  },
+  {
+    id: '20000000-0000-4000-8000-000000000004',
+    name: '3-Branch Roaming VIP',
+    billingCycle: BillingCycle.QUARTERLY,
+    priceBdt: 14500,
+    durationDays: 90,
+    roamingEnabled: true,
+    offPeakOnly: false,
+  },
+];
+
+function OnboardFlowContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const branchParam = searchParams.get('branch');
+  const planParam = searchParams.get('plan');
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
 
   const [step, setStep] = useState<OnboardStep>(1);
-  const [branches, setBranches] = useState<BranchItem[]>([]);
-  const [plans, setPlans] = useState<MembershipPlanItem[]>([]);
+  const [branches, setBranches] = useState<BranchItem[]>(FALLBACK_BRANCHES);
+  const [plans, setPlans] = useState<MembershipPlanItem[]>(FALLBACK_PLANS);
+  const [apiOffline, setApiOffline] = useState(false);
 
   // Step 1: Details & Branch
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('+8801');
   const [password, setPassword] = useState('');
-  const [homeBranchId, setHomeBranchId] = useState('');
+  const [homeBranchId, setHomeBranchId] = useState(FALLBACK_BRANCHES[0].id);
   const [emergencyContact, setEmergencyContact] = useState('');
 
   // Step 2: PAR-Q & Canvas Waiver Signature
@@ -54,28 +136,56 @@ export default function OnboardPage() {
   const [registeredUserId, setRegisteredUserId] = useState<string | undefined>(undefined);
 
   // Step 4: Plan & MockCheckoutModal
-  const [selectedPlan, setSelectedPlan] = useState<MembershipPlanItem | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<MembershipPlanItem | null>(FALLBACK_PLANS[1]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Pre-select branch from ?branch= immediately on fallback list
+    if (branchParam) {
+      const normalized = branchParam.trim().toUpperCase();
+      const matched = FALLBACK_BRANCHES.find(
+        (b) => b.code.toUpperCase() === normalized || b.id === branchParam,
+      );
+      if (matched) setHomeBranchId(matched.id);
+    }
+    if (planParam) {
+      const matchedPlan = FALLBACK_PLANS.find((p) => p.id === planParam);
+      if (matchedPlan) setSelectedPlan(matchedPlan);
+    }
+
     void (async () => {
       try {
         const [branchList, planList] = await Promise.all([
           apiGet<BranchItem[]>('/api/branches'),
           apiGet<MembershipPlanItem[]>('/api/billing/plans'),
         ]);
-        setBranches(branchList);
-        setPlans(planList);
-        if (branchList[0]) setHomeBranchId(branchList[0].id);
-        if (planList[0]) setSelectedPlan(planList[0]);
+        setApiOffline(false);
+        if (branchList.length > 0) {
+          setBranches(branchList);
+          const matched = branchParam
+            ? branchList.find(
+                (b) =>
+                  b.code.toUpperCase() === branchParam.trim().toUpperCase() ||
+                  b.id === branchParam,
+              )
+            : null;
+          setHomeBranchId(matched?.id ?? branchList[0].id);
+        }
+        if (planList.length > 0) {
+          setPlans(planList);
+          const matchedPlan = planParam
+            ? planList.find((p) => p.id === planParam)
+            : null;
+          setSelectedPlan(matchedPlan ?? planList[0]);
+        }
       } catch {
-        // Handled cleanly if backend not yet online
+        setApiOffline(true);
       }
     })();
-  }, []);
+  }, [branchParam, planParam]);
 
   // Initialize signature canvas background
   useEffect(() => {
@@ -190,7 +300,7 @@ export default function OnboardPage() {
       }
       setStep(3);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Registration failed.');
+      setError(err instanceof ApiError ? err.message : 'Registration failed. Ensure API server is online.');
     } finally {
       setSubmitting(false);
     }
@@ -216,430 +326,476 @@ export default function OnboardPage() {
   };
 
   const steps = [
-    { num: 1, label: 'Details & Branch' },
-    { num: 2, label: 'PAR-Q & Waiver' },
-    { num: 3, label: 'OTP Verification' },
-    { num: 4, label: 'Plan & Checkout' },
+    { num: 1, label: 'Details' },
+    { num: 2, label: 'PAR-Q' },
+    { num: 3, label: 'OTP' },
+    { num: 4, label: 'Plan' },
   ] as const;
 
   return (
-    <main className="min-h-screen bg-obsidian px-4 py-8 text-chalk md:px-6 md:py-10">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <div className="flex items-center justify-between">
+    <main className="min-h-screen bg-obsidian px-4 pt-6 pb-24 text-chalk md:px-6 md:py-10">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <div className="flex items-center justify-between gap-3">
           <Link
             href="/login"
-            className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border border-steel bg-iron px-4 py-2 text-xs font-bold uppercase tracking-wider text-silver hover:border-crimson hover:text-chalk"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-steel bg-iron px-4 text-xs font-bold uppercase tracking-wider text-silver hover:border-crimson hover:text-chalk"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
             Back to Login
           </Link>
           <Link
             href="/dev-inbox"
-            className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border border-steel bg-iron px-4 py-2 text-xs font-bold uppercase tracking-wider text-amber-400 hover:border-amber-400"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-steel bg-iron px-4 text-xs font-bold uppercase tracking-wider text-amber-400 hover:border-amber-400"
           >
-            <Inbox className="h-4 w-4" />
-            Open Dev Inbox
+            <Inbox className="h-4 w-4" strokeWidth={1.75} />
+            Dev Inbox
           </Link>
         </div>
 
-        {/* Header + Stepper */}
-        <section className="va-card va-hero-gradient rounded-2xl p-6">
-          <div className="flex items-center gap-4">
-            <Image
-              src="/images/logo.png"
-              alt="Vintage Aesthetics Gym"
-              width={54}
-              height={54}
-              className="rounded-full border border-chrome/40 bg-obsidian p-0.5"
-            />
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-chrome">
-                Zero-Paperwork Digital Join
-              </p>
-              <h1 className="font-display text-3xl font-extrabold uppercase text-chalk">
-                Member Self-Onboarding
-              </h1>
+        <div className="grid gap-6 lg:grid-cols-12">
+          {/* Desktop Editorial Visual Rail */}
+          <aside className="hidden overflow-hidden rounded-2xl border border-steel bg-iron lg:col-span-4 lg:flex lg:flex-col">
+            <div className="relative h-72 w-full">
+              <Image
+                src="/images/power-rack-detail.jpg"
+                alt="Vintage Aesthetics matte-black and crimson power rack"
+                fill
+                className="object-cover object-top"
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-[#0A0A0C] via-[#0A0A0C]/65 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-5">
+                <BrandCrest size={42} className="mb-3" />
+                <h2 className="font-display text-2xl font-extrabold uppercase text-chalk">
+                  Zero-Paperwork Digital Join
+                </h2>
+                <p className="mt-1 text-xs text-silver">
+                  Complete screening, verify OTP, and unlock instant 60s QR access.
+                </p>
+              </div>
             </div>
-          </div>
+            <div className="flex-1 space-y-3 p-5 text-xs text-chrome">
+              <div className="border-b border-steel pb-3">
+                <p className="font-bold text-chalk">AES-256-GCM Health Encryption</p>
+                <p className="mt-0.5">PAR-Q screening &amp; waiver signature encrypted at rest.</p>
+              </div>
+              <div className="border-b border-steel pb-3">
+                <p className="font-bold text-chalk">Flexible Bangladesh Channels</p>
+                <p className="mt-0.5">bKash, Nagad, Card, or Reception Cash with split options.</p>
+              </div>
+              <div>
+                <p className="font-bold text-chalk">Instant Digital Pass</p>
+                <p className="mt-0.5">Walk straight to the turnstile once cleared.</p>
+              </div>
+            </div>
+          </aside>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {steps.map((s) => {
-              const active = step === s.num;
-              const done = step > s.num;
-              return (
-                <div
-                  key={s.num}
-                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${
-                    active
-                      ? 'border-crimson bg-crimson/20 text-chalk'
-                      : done
-                        ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
-                        : 'border-steel bg-obsidian/70 text-chrome'
-                  }`}
-                >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-obsidian text-[11px]">
-                    {done ? '✓' : s.num}
-                  </span>
-                  <span className="truncate">{s.label}</span>
+          {/* 4-Step Wizard Column */}
+          <div className="space-y-5 lg:col-span-8">
+            <section className="overflow-hidden rounded-2xl border border-steel bg-iron">
+              <div className="va-led-rule w-full" />
+              <div className="p-5 md:p-6">
+                <div className="flex items-center gap-3.5">
+                  <BrandCrest size={48} className="lg:hidden" />
+                  <div>
+                    <p className="text-xs font-medium text-chrome">
+                      Digital Member Registration
+                    </p>
+                    <h1 className="font-display text-3xl font-extrabold uppercase text-chalk">
+                      Member Self-Onboarding
+                    </h1>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        </section>
 
-        {error ? (
-          <div
-            role="alert"
-            className="flex items-start gap-2.5 rounded-xl border border-[#FF2A3B]/60 bg-[#FF2A3B]/15 p-4 text-sm font-semibold text-[#FF2A3B]"
-          >
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-            <span>{error}</span>
-          </div>
-        ) : null}
-
-        {/* STEP 1: DETAILS & BRANCH */}
-        {step === 1 ? (
-          <form onSubmit={handleStep1Submit} className="va-card space-y-4 rounded-2xl p-6">
-            <h2 className="font-display text-2xl font-bold uppercase text-chalk">
-              1. Personal Details & Home Branch
-            </h2>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-silver">
-                  Full Name *
-                </span>
-                <input
-                  type="text"
-                  required
-                  minLength={2}
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Ayesha Siddiqua"
-                  className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-silver">
-                  Bangladesh Mobile (+880...) *
-                </span>
-                <input
-                  type="tel"
-                  required
-                  minLength={10}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+8801712345678"
-                  className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-silver">
-                  Email Address
-                </span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ayesha@example.com"
-                  className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-silver">
-                  Home Branch *
-                </span>
-                <select
-                  required
-                  value={homeBranchId}
-                  onChange={(e) => setHomeBranchId(e.target.value)}
-                  className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
-                >
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.code} • {b.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-silver">
-                  Password (Min 10 Chars) *
-                </span>
-                <input
-                  type="password"
-                  required
-                  minLength={10}
-                  maxLength={128}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 10 characters"
-                  className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-silver">
-                  Emergency Contact
-                </span>
-                <input
-                  type="text"
-                  value={emergencyContact}
-                  onChange={(e) => setEmergencyContact(e.target.value)}
-                  placeholder="Rahim (+8801711000000)"
-                  className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
-                />
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-crimson px-5 py-3 text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
-            >
-              Continue to PAR-Q Health Waiver
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
-        ) : null}
-
-        {/* STEP 2: PAR-Q HEALTH QUESTIONS + CANVAS SIGNATURE */}
-        {step === 2 ? (
-          <form onSubmit={handleRegisterSubmit} className="va-card space-y-5 rounded-2xl p-6">
-            <div className="flex items-center gap-3">
-              <HeartPulse className="h-6 w-6 text-crimson" />
-              <div>
-                <h2 className="font-display text-2xl font-bold uppercase text-chalk">
-                  2. Encrypted PAR-Q Health Screening & Signature
-                </h2>
-                <p className="text-xs text-chrome">
-                  Protected with AES-256-GCM at rest. Sign using mouse or finger below.
-                </p>
+                {/* Non-Truncating 4-Step Progress Bar */}
+                <div className="mt-5 grid grid-cols-4 gap-2">
+                  {steps.map((s) => {
+                    const active = step === s.num;
+                    const done = step > s.num;
+                    return (
+                      <div
+                        key={s.num}
+                        className={`flex flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2.5 text-center text-xs font-bold sm:flex-row sm:gap-2 ${
+                          active
+                            ? 'border-crimson bg-crimson/20 text-chalk'
+                            : done
+                              ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                              : 'border-steel bg-obsidian text-chrome'
+                        }`}
+                      >
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-obsidian text-[11px] tabular-nums">
+                          {done ? <Check className="h-3.5 w-3.5" strokeWidth={2} /> : s.num}
+                        </span>
+                        <span className="text-[11px] sm:text-xs">{s.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            </section>
 
-            <div className="space-y-3">
-              {[
-                {
-                  label: 'Do you have any known heart or cardiovascular condition?',
-                  checked: hasHeartCondition,
-                  onChange: setHasHeartCondition,
-                },
-                {
-                  label: 'Do you experience chest pain or dizziness during physical exertion?',
-                  checked: hasChestPain,
-                  onChange: setHasChestPain,
-                },
-                {
-                  label: 'Do you have a joint, spine, or knee injury requiring trainer modification?',
-                  checked: hasJointInjury,
-                  onChange: setHasJointInjury,
-                },
-              ].map((q) => (
-                <label
-                  key={q.label}
-                  className="flex min-h-[52px] cursor-pointer items-center justify-between gap-4 rounded-xl border border-steel bg-obsidian/70 px-4 py-3"
-                >
-                  <span className="text-sm text-silver">{q.label}</span>
-                  <input
-                    type="checkbox"
-                    checked={q.checked}
-                    onChange={(e) => q.onChange(e.target.checked)}
-                    className="h-5 w-5 shrink-0 accent-crimson"
-                  />
-                </label>
-              ))}
-            </div>
-
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-silver">
-                Primary Training Goal
-              </span>
-              <input
-                type="text"
-                value={fitnessGoal}
-                onChange={(e) => setFitnessGoal(e.target.value)}
-                className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
-              />
-            </label>
-
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-silver">
-                  Digital Liability Waiver Signature *
-                </span>
-                <button
-                  type="button"
-                  onClick={clearSignature}
-                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-steel bg-obsidian px-3 text-xs font-semibold text-chrome hover:text-chalk"
-                >
-                  <Eraser className="h-3.5 w-3.5" />
-                  Clear Signature
-                </button>
-              </div>
-              <canvas
-                ref={canvasRef}
-                width={620}
-                height={180}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                className="h-44 w-full touch-none rounded-xl border border-chrome/40 bg-obsidian cursor-crosshair"
-              />
-              <p className="mt-1.5 text-[11px] text-chrome">
-                {hasSigned
-                  ? 'Signature captured. Ready to submit registration.'
-                  : 'Draw your signature inside the box above.'}
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="min-h-[52px] rounded-xl border border-steel bg-obsidian px-5 text-sm font-bold text-silver hover:text-chalk"
+            {apiOffline ? (
+              <div
+                role="status"
+                className="flex items-center gap-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-xs font-medium text-amber-400"
               >
-                Back
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-crimson px-5 text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
-              >
-                {submitting ? 'Creating Account...' : 'Submit & Get OTP'}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          </form>
-        ) : null}
-
-        {/* STEP 3: OTP VERIFICATION PREVIEW */}
-        {step === 3 ? (
-          <form onSubmit={handleVerifyOtp} className="va-card space-y-5 rounded-2xl p-6">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="h-6 w-6 text-emerald-400" />
-              <div>
-                <h2 className="font-display text-2xl font-bold uppercase text-chalk">
-                  3. Verify 6-Digit OTP
-                </h2>
-                <p className="text-xs text-chrome">
-                  Zero-cost OTP dispatched to your free local Dev Inbox.
-                </p>
-              </div>
-            </div>
-
-            {devOtpPreview ? (
-              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
-                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
-                  <Sparkles className="h-4 w-4" />
-                  Free Dev OTP Preview
-                </p>
-                <p className="mt-1 font-display text-3xl font-extrabold tracking-[0.25em] text-chalk">
-                  {devOtpPreview}
-                </p>
+                <WifiOff className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                <span>
+                  API offline — showing cached branch &amp; plan options. Connect backend on port 4000 to submit registration.
+                </span>
               </div>
             ) : null}
 
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-silver">
-                Enter 6-Digit Code
-              </span>
-              <input
-                type="text"
-                required
-                maxLength={6}
-                minLength={6}
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value)}
-                placeholder="123456"
-                className="min-h-[56px] w-full rounded-xl border border-steel bg-obsidian px-4 text-center font-display text-3xl font-extrabold tracking-[0.35em] text-chalk outline-none focus:border-crimson"
-              />
-            </label>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-crimson px-5 text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
-            >
-              {submitting ? 'Verifying...' : 'Verify OTP & Choose Plan'}
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
-        ) : null}
-
-        {/* STEP 4: PLAN & PROMO -> MOCK CHECKOUT */}
-        {step === 4 ? (
-          <section className="va-card space-y-5 rounded-2xl p-6">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-6 w-6 text-emerald-400" />
-              <div>
-                <h2 className="font-display text-2xl font-bold uppercase text-chalk">
-                  4. Select Membership Plan & Checkout
-                </h2>
-                <p className="text-xs text-chrome">
-                  Account verified! Activate your membership using bKash, Nagad, or Card sandbox.
-                </p>
+            {error ? (
+              <div
+                role="alert"
+                className="flex items-start gap-2.5 rounded-xl border border-[#FF2A3B]/60 bg-[#FF2A3B]/15 p-4 text-sm font-semibold text-[#FF2A3B]"
+              >
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.75} />
+                <span>{error}</span>
               </div>
-            </div>
+            ) : null}
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              {plans.map((plan) => {
-                const active = selectedPlan?.id === plan.id;
-                return (
+            {/* STEP 1: DETAILS & BRANCH */}
+            {step === 1 ? (
+              <form onSubmit={handleStep1Submit} className="va-card space-y-4 rounded-2xl p-6">
+                <h2 className="font-display text-2xl font-bold uppercase text-chalk">
+                  1. Personal Details &amp; Home Branch
+                </h2>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold text-silver">
+                      Full Name *
+                    </span>
+                    <input
+                      type="text"
+                      required
+                      minLength={2}
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Ayesha Siddiqua"
+                      className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold text-silver">
+                      Bangladesh Mobile (+880...) *
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      minLength={10}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+8801712345678"
+                      className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold text-silver">
+                      Email Address
+                    </span>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="ayesha@example.com"
+                      className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold text-silver">
+                      Home Branch *
+                    </span>
+                    <select
+                      required
+                      value={homeBranchId}
+                      onChange={(e) => setHomeBranchId(e.target.value)}
+                      className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
+                    >
+                      {branches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.code} · {b.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold text-silver">
+                      Password (Min 10 Chars) *
+                    </span>
+                    <input
+                      type="password"
+                      required
+                      minLength={10}
+                      maxLength={128}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="At least 10 characters"
+                      className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold text-silver">
+                      Emergency Contact
+                    </span>
+                    <input
+                      type="text"
+                      value={emergencyContact}
+                      onChange={(e) => setEmergencyContact(e.target.value)}
+                      placeholder="Rahim (+8801711000000)"
+                      className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
+                    />
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  className="flex min-h-[50px] w-full items-center justify-center rounded-xl bg-crimson px-5 py-3 text-sm font-bold uppercase tracking-wider text-chalk transition-colors hover:bg-crimson-hover"
+                >
+                  Continue to PAR-Q Health Waiver
+                </button>
+              </form>
+            ) : null}
+
+            {/* STEP 2: PAR-Q HEALTH QUESTIONS + CANVAS SIGNATURE */}
+            {step === 2 ? (
+              <form onSubmit={handleRegisterSubmit} className="va-card space-y-5 rounded-2xl p-6">
+                <div className="flex items-center gap-3">
+                  <HeartPulse className="h-6 w-6 text-crimson" strokeWidth={1.75} />
+                  <div>
+                    <h2 className="font-display text-2xl font-bold uppercase text-chalk">
+                      2. Encrypted PAR-Q Screening &amp; Signature
+                    </h2>
+                    <p className="text-xs text-chrome">
+                      Protected with AES-256-GCM at rest. Sign using mouse or finger below.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    {
+                      label: 'Do you have any known heart or cardiovascular condition?',
+                      checked: hasHeartCondition,
+                      onChange: setHasHeartCondition,
+                    },
+                    {
+                      label: 'Do you experience chest pain or dizziness during physical exertion?',
+                      checked: hasChestPain,
+                      onChange: setHasChestPain,
+                    },
+                    {
+                      label: 'Do you have a joint, spine, or knee injury requiring trainer modification?',
+                      checked: hasJointInjury,
+                      onChange: setHasJointInjury,
+                    },
+                  ].map((q) => (
+                    <label
+                      key={q.label}
+                      className="flex min-h-[52px] cursor-pointer items-center justify-between gap-4 rounded-xl border border-steel bg-obsidian px-4 py-3"
+                    >
+                      <span className="text-sm text-silver">{q.label}</span>
+                      <input
+                        type="checkbox"
+                        checked={q.checked}
+                        onChange={(e) => q.onChange(e.target.checked)}
+                        className="h-5 w-5 shrink-0 accent-crimson"
+                      />
+                    </label>
+                  ))}
+                </div>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold text-silver">
+                    Primary Training Goal
+                  </span>
+                  <input
+                    type="text"
+                    value={fitnessGoal}
+                    onChange={(e) => setFitnessGoal(e.target.value)}
+                    className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk outline-none focus:border-crimson"
+                  />
+                </label>
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-silver">
+                      Digital Liability Waiver Signature *
+                    </span>
+                    <button
+                      type="button"
+                      onClick={clearSignature}
+                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-steel bg-obsidian px-3 text-xs font-semibold text-chrome hover:text-chalk"
+                    >
+                      <Eraser className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      Clear Signature
+                    </button>
+                  </div>
+                  <canvas
+                    ref={canvasRef}
+                    width={620}
+                    height={180}
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    className="h-44 w-full cursor-crosshair touch-none rounded-xl border border-chrome/40 bg-obsidian"
+                  />
+                  <p className="mt-1.5 text-[11px] text-chrome">
+                    {hasSigned
+                      ? 'Signature captured. Ready to submit registration.'
+                      : 'Draw your signature inside the box above.'}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
                   <button
-                    key={plan.id}
                     type="button"
-                    onClick={() => setSelectedPlan(plan)}
-                    className={`min-h-[112px] rounded-xl border p-4 text-left transition-all ${
-                      active
-                        ? 'border-crimson bg-oxblood/30 text-chalk'
-                        : 'border-steel bg-obsidian/80 text-silver hover:border-chrome/60'
-                    }`}
+                    onClick={() => setStep(1)}
+                    className="min-h-[50px] rounded-xl border border-steel bg-obsidian px-5 text-sm font-bold text-silver hover:text-chalk"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-display text-xl font-bold uppercase text-chalk">
-                        {plan.name}
-                      </span>
-                      {plan.roamingEnabled ? (
-                        <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">
-                          3-Branch VIP
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="font-display mt-2 text-2xl font-extrabold text-crimson">
-                      {formatBdt(plan.priceBdt)}
-                    </p>
-                    <p className="mt-1 text-xs text-chrome">
-                      {plan.durationDays} Days • {plan.billingCycle}
-                    </p>
+                    Back
                   </button>
-                );
-              })}
-            </div>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex min-h-[50px] flex-1 items-center justify-center rounded-xl bg-crimson px-5 text-sm font-bold uppercase tracking-wider text-chalk transition-colors hover:bg-crimson-hover disabled:opacity-50"
+                  >
+                    {submitting ? 'Creating Account...' : 'Submit & Get OTP'}
+                  </button>
+                </div>
+              </form>
+            ) : null}
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                disabled={!selectedPlan}
-                onClick={() => setCheckoutOpen(true)}
-                className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-crimson px-5 text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
-              >
-                Open Mock Checkout
-                <ArrowRight className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push('/member')}
-                className="min-h-[52px] rounded-xl border border-steel bg-obsidian px-5 text-sm font-bold text-silver hover:text-chalk"
-              >
-                Skip to Member PWA
-              </button>
-            </div>
-          </section>
-        ) : null}
+            {/* STEP 3: OTP VERIFICATION PREVIEW */}
+            {step === 3 ? (
+              <form onSubmit={handleVerifyOtp} className="va-card space-y-5 rounded-2xl p-6">
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="h-6 w-6 text-emerald-500" strokeWidth={1.75} />
+                  <div>
+                    <h2 className="font-display text-2xl font-bold uppercase text-chalk">
+                      3. Verify 6-Digit OTP
+                    </h2>
+                    <p className="text-xs text-chrome">
+                      Verification code dispatched to your local Dev Inbox.
+                    </p>
+                  </div>
+                </div>
+
+                {devOtpPreview ? (
+                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+                    <p className="flex items-center gap-2 text-xs font-bold text-amber-400">
+                      <KeyRound className="h-4 w-4" strokeWidth={1.75} />
+                      Dev OTP Preview
+                    </p>
+                    <p className="mt-1 font-display text-3xl font-extrabold tracking-[0.25em] text-chalk tabular-nums">
+                      {devOtpPreview}
+                    </p>
+                  </div>
+                ) : null}
+
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold text-silver">
+                    Enter 6-Digit Code
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    minLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    placeholder="123456"
+                    className="min-h-[56px] w-full rounded-xl border border-steel bg-obsidian px-4 text-center font-display text-3xl font-extrabold tracking-[0.35em] text-chalk outline-none focus:border-crimson"
+                  />
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex min-h-[50px] w-full items-center justify-center rounded-xl bg-crimson px-5 text-sm font-bold uppercase tracking-wider text-chalk transition-colors hover:bg-crimson-hover disabled:opacity-50"
+                >
+                  {submitting ? 'Verifying...' : 'Verify OTP & Choose Plan'}
+                </button>
+              </form>
+            ) : null}
+
+            {/* STEP 4: PLAN & PROMO -> MOCK CHECKOUT */}
+            {step === 4 ? (
+              <section className="va-card space-y-5 rounded-2xl p-6">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-500" strokeWidth={1.75} />
+                  <div>
+                    <h2 className="font-display text-2xl font-bold uppercase text-chalk">
+                      4. Select Membership Plan &amp; Checkout
+                    </h2>
+                    <p className="text-xs text-chrome">
+                      Account verified. Activate your membership using bKash, Nagad, or Card sandbox.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {plans.map((plan) => {
+                    const active = selectedPlan?.id === plan.id;
+                    return (
+                      <button
+                        key={plan.id}
+                        type="button"
+                        onClick={() => setSelectedPlan(plan)}
+                        className={`min-h-[112px] rounded-xl border p-4 text-left transition-colors ${
+                          active
+                            ? 'border-crimson bg-oxblood/30 text-chalk'
+                            : 'border-steel bg-obsidian text-silver hover:border-chrome/60'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-display text-xl font-bold uppercase text-chalk">
+                            {plan.name}
+                          </span>
+                          {plan.roamingEnabled ? (
+                            <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                              3-Branch VIP
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="font-display mt-2 text-2xl font-extrabold text-crimson tabular-nums">
+                          {formatBdt(plan.priceBdt)}
+                        </p>
+                        <p className="mt-1 text-xs text-chrome">
+                          {plan.durationDays} Days · {plan.billingCycle}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    disabled={!selectedPlan}
+                    onClick={() => setCheckoutOpen(true)}
+                    className="flex min-h-[50px] flex-1 items-center justify-center rounded-xl bg-crimson px-5 text-sm font-bold uppercase tracking-wider text-chalk transition-colors hover:bg-crimson-hover disabled:opacity-50"
+                  >
+                    Open Mock Checkout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/member')}
+                    className="min-h-[50px] rounded-xl border border-steel bg-obsidian px-5 text-sm font-bold text-silver hover:text-chalk"
+                  >
+                    Skip to Member PWA
+                  </button>
+                </div>
+              </section>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <MockCheckoutModal
@@ -656,5 +812,19 @@ export default function OnboardPage() {
         }}
       />
     </main>
+  );
+}
+
+export default function OnboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-obsidian p-6 text-center text-sm text-chrome">
+          Loading registration...
+        </div>
+      }
+    >
+      <OnboardFlowContent />
+    </Suspense>
   );
 }

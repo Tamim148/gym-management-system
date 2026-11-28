@@ -31,9 +31,20 @@ body {
 .va-card {
   background-color: #141418;
   border: 1px solid #27272a;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
-.va-hero-gradient {
-  background: radial-gradient(circle at top right, #7f1118 0%, #141418 55%, #0a0a0c 100%);
+.va-led-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #dc1e26 35%, #7f1118 75%, transparent 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

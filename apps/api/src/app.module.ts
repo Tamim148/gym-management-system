@@ -15,6 +15,7 @@ import { RolesGuard } from './modules/auth/roles.guard';
 import { BillingModule } from './modules/billing/billing.module';
 import { BranchesModule } from './modules/branches/branches.module';
 import { FacilityModule } from './modules/facility/facility.module';
+import { LeadsModule } from './modules/leads/leads.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { SchedulingModule } from './modules/scheduling/scheduling.module';
@@ -46,6 +47,7 @@ import { PrismaModule } from './prisma/prisma.module';
     BillingModule,
     SchedulingModule,
     FacilityModule,
+    LeadsModule,
     AdminModule,
     AiModule,
   ],

@@ -14,6 +14,13 @@ import type {
   UserStatus,
 } from '@vintage/shared';
 
+export interface PublicCoachSummary {
+  id: string;
+  fullName: string;
+  specialty: string;
+  branchCode: string;
+}
+
 export interface BranchItem {
   id: string;
   name: string;
@@ -23,6 +30,23 @@ export interface BranchItem {
   currentOccupancy: number;
   edgeNodeOnline: boolean;
   lastEdgeHeartbeat?: string;
+  staffedHours?: string;
+  coaches?: PublicCoachSummary[];
+}
+
+export interface FreePassLeadPayload {
+  fullName: string;
+  phone: string;
+  branchId: string;
+  preferredVisitWindow: 'MORNING' | 'OFF_PEAK_1_3PM' | 'EVENING';
+  goal?: string;
+}
+
+export interface FreePassLeadResult {
+  id: string;
+  referenceCode: string;
+  branchName: string;
+  message: string;
 }
 
 export interface UserSummaryItem {

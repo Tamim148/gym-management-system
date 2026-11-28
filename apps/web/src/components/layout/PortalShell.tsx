@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -23,6 +22,7 @@ import {
 import { UserRole, type AuthUserProfile } from '@vintage/shared';
 import { logoutAndWipe } from '@/lib/dal';
 import type { BranchItem } from '@/lib/types';
+import { BrandCrest } from '@/components/ui/BrandCrest';
 
 export interface PortalNavItem {
   label: string;
@@ -56,18 +56,18 @@ const DEFAULT_NAV: PortalNavItem[] = [
 function renderNavIcon(icon: PortalNavItem['icon']) {
   switch (icon) {
     case 'desk':
-      return <ShieldCheck className="h-5 w-5" aria-hidden="true" />;
+      return <ShieldCheck className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />;
     case 'admin':
-      return <LayoutDashboard className="h-5 w-5" aria-hidden="true" />;
+      return <LayoutDashboard className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />;
     case 'users':
-      return <Users className="h-5 w-5" aria-hidden="true" />;
+      return <Users className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />;
     case 'billing':
-      return <CreditCard className="h-5 w-5" aria-hidden="true" />;
+      return <CreditCard className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />;
     case 'simulator':
-      return <Terminal className="h-5 w-5" aria-hidden="true" />;
+      return <Terminal className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />;
     case 'inbox':
     default:
-      return <Inbox className="h-5 w-5" aria-hidden="true" />;
+      return <Inbox className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />;
   }
 }
 
@@ -125,20 +125,14 @@ export function PortalShell({
   const sidebarContent = (
     <div className="flex h-full flex-col bg-[#0F0F12] text-chalk">
       {/* Oxblood & Obsidian Crest Header */}
-      <div className="border-b border-steel bg-gradient-to-br from-oxblood via-[#3A090D] to-[#0F0F12] p-4">
+      <div className="border-b border-steel bg-oxblood-deep p-4">
         <Link href="/" className="flex items-center gap-3">
-          <Image
-            src="/images/logo.png"
-            alt="Vintage Aesthetics Gym"
-            width={44}
-            height={44}
-            className="rounded-full border border-chrome/30 bg-obsidian p-0.5"
-          />
+          <BrandCrest size={42} />
           <div className="min-w-0">
             <p className="font-display text-lg font-extrabold uppercase leading-tight tracking-wide text-chalk">
               Vintage Aesthetics
             </p>
-            <p className="truncate text-[11px] font-medium uppercase tracking-widest text-silver/80">
+            <p className="truncate text-[11px] font-medium text-silver/80">
               {user.role.replace('_', ' ')}
             </p>
           </div>
@@ -148,27 +142,27 @@ export function PortalShell({
         <div className="mt-4">
           {canSwitchBranch ? (
             <label className="block">
-              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-silver/70">
+              <span className="mb-1 block text-[11px] font-semibold text-silver/80">
                 Active Branch Scope
               </span>
               <select
                 value={selectedBranchId}
                 onChange={(e) => onSelectBranch?.(e.target.value)}
-                className="min-h-[44px] w-full rounded-lg border border-steel bg-obsidian/90 px-3 py-2 text-xs font-semibold text-chalk outline-none focus:border-crimson"
+                className="min-h-11 w-full rounded-lg border border-steel bg-obsidian px-3 py-2 text-xs font-semibold text-chalk outline-none focus:border-crimson"
               >
                 {branches.map((branch) => (
                   <option key={branch.id} value={branch.id}>
-                    {branch.code} • {branch.name}
+                    {branch.code} · {branch.name}
                   </option>
                 ))}
               </select>
             </label>
           ) : (
-            <div className="flex items-center justify-between rounded-lg border border-white/15 bg-obsidian/70 px-3 py-2">
+            <div className="flex items-center justify-between rounded-lg border border-steel bg-obsidian px-3 py-2">
               <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-crimson" aria-hidden="true" />
+                <Building2 className="h-4 w-4 text-crimson" strokeWidth={1.75} aria-hidden="true" />
                 <span className="text-xs font-bold tracking-wide text-chalk">
-                  {activeBranch ? `${activeBranch.code} • ${activeBranch.name}` : 'Branch Locked'}
+                  {activeBranch ? `${activeBranch.code} · ${activeBranch.name}` : 'Branch Locked'}
                 </span>
               </div>
             </div>
@@ -185,9 +179,9 @@ export function PortalShell({
               key={item.href}
               href={item.href}
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex min-h-[48px] items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors ${
+              className={`flex min-h-12 items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors ${
                 isActive
-                  ? 'bg-crimson text-chalk shadow-lg shadow-crimson/25'
+                  ? 'border border-crimson bg-crimson text-chalk'
                   : 'text-chrome hover:bg-iron hover:text-chalk'
               }`}
             >
@@ -207,7 +201,7 @@ export function PortalShell({
 
       {/* Operator Footer + Logout */}
       <div className="border-t border-steel p-3">
-        <div className="mb-3 rounded-xl border border-steel bg-iron/80 px-3 py-2.5">
+        <div className="mb-3 rounded-xl border border-steel bg-iron px-3 py-2.5">
           <p className="truncate text-xs font-bold text-chalk">{user.fullName}</p>
           <p className="truncate text-[11px] text-chrome">{user.email ?? user.phone}</p>
         </div>
@@ -215,9 +209,9 @@ export function PortalShell({
           type="button"
           onClick={handleLogout}
           disabled={loggingOut}
-          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-steel bg-iron px-4 py-2.5 text-sm font-semibold text-silver transition-colors hover:border-crimson/60 hover:bg-oxblood/40 hover:text-chalk disabled:opacity-50"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-steel bg-iron px-4 py-2.5 text-sm font-semibold text-silver transition-colors hover:border-crimson/60 hover:bg-oxblood/40 hover:text-chalk disabled:opacity-50"
         >
-          <LogOut className="h-4 w-4" aria-hidden="true" />
+          <LogOut className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           {loggingOut ? 'Signing Out...' : 'Logout & Wipe Cache'}
         </button>
       </div>
@@ -227,7 +221,7 @@ export function PortalShell({
   return (
     <div
       className={`min-h-screen transition-colors ${
-        lightMode ? 'bg-[#F4F4F6] text-zinc-900' : 'bg-obsidian text-chalk'
+        lightMode ? 'bg-[#F4F4F6] text-[#18181B]' : 'bg-obsidian text-chalk'
       }`}
     >
       {/* Desktop Fixed 240px Sidebar */}
@@ -239,7 +233,7 @@ export function PortalShell({
       {mobileMenuOpen ? (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div
-            className="fixed inset-0 bg-black/70"
+            className="fixed inset-0 bg-black/75"
             onClick={() => setMobileMenuOpen(false)}
           />
           <div className="relative z-10 w-[260px] max-w-[85vw] border-r border-steel">
@@ -247,9 +241,9 @@ export function PortalShell({
               type="button"
               onClick={() => setMobileMenuOpen(false)}
               aria-label="Close navigation menu"
-              className="absolute top-3 right-3 z-20 flex h-10 w-10 items-center justify-center rounded-lg bg-obsidian/80 text-chalk"
+              className="absolute top-3 right-3 z-20 flex h-10 w-10 items-center justify-center rounded-lg bg-obsidian text-chalk"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" strokeWidth={1.75} />
             </button>
             {sidebarContent}
           </div>
@@ -264,7 +258,7 @@ export function PortalShell({
             role="alert"
             className="flex items-center justify-center gap-2 border-b border-amber-500/40 bg-amber-500 px-4 py-2 text-xs font-bold uppercase tracking-wider text-zinc-950"
           >
-            <WifiOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <WifiOff className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
             <span>
               Offline Mode — Local Queue Active
               {anyBranchOffline ? ' (Edge Node Disconnected — Sync Pending)' : ''}
@@ -274,10 +268,10 @@ export function PortalShell({
 
         {/* Top Bar */}
         <header
-          className={`sticky top-0 z-20 border-b px-4 py-3 backdrop-blur-md md:px-6 ${
+          className={`sticky top-0 z-20 border-b px-4 py-3 md:px-6 ${
             lightMode
-              ? 'border-zinc-200 bg-white/95 text-zinc-900'
-              : 'border-steel bg-iron/95 text-chalk'
+              ? 'border-zinc-200 bg-white text-[#18181B]'
+              : 'border-steel bg-iron text-chalk'
           }`}
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -286,13 +280,13 @@ export function PortalShell({
                 type="button"
                 onClick={() => setMobileMenuOpen(true)}
                 aria-label="Open navigation menu"
-                className={`flex h-12 w-12 items-center justify-center rounded-xl border lg:hidden ${
+                className={`flex h-11 w-11 items-center justify-center rounded-xl border lg:hidden ${
                   lightMode
                     ? 'border-zinc-200 bg-zinc-50 text-zinc-800'
                     : 'border-steel bg-obsidian text-chalk'
                 }`}
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5" strokeWidth={1.75} />
               </button>
               <div>
                 <h1 className="font-display text-2xl font-extrabold uppercase tracking-wide md:text-3xl">
@@ -310,13 +304,13 @@ export function PortalShell({
               {/* Live Occupancy Counter */}
               {activeBranch ? (
                 <div
-                  className={`flex min-h-[44px] items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-bold ${
+                  className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-bold tabular-nums ${
                     lightMode
                       ? 'border-zinc-200 bg-zinc-50 text-zinc-800'
                       : 'border-steel bg-obsidian text-chalk'
                   }`}
                 >
-                  <Users className="h-4 w-4 text-crimson" aria-hidden="true" />
+                  <Users className="h-4 w-4 text-crimson" strokeWidth={1.75} aria-hidden="true" />
                   <span className="font-display text-base">
                     {activeBranch.currentOccupancy} / {activeBranch.maxOccupancy}
                   </span>
@@ -327,18 +321,13 @@ export function PortalShell({
               {/* Edge Heartbeat Pill */}
               {activeBranch ? (
                 <div
-                  className={`flex min-h-[44px] items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-bold ${
+                  className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-bold ${
                     activeBranch.edgeNodeOnline
                       ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-500'
                       : 'border-amber-500/50 bg-amber-500/15 text-amber-500'
                   }`}
                 >
-                  <span
-                    className={`h-2.5 w-2.5 rounded-full ${
-                      activeBranch.edgeNodeOnline ? 'animate-pulse bg-emerald-500' : 'bg-amber-500'
-                    }`}
-                  />
-                  <Activity className="h-3.5 w-3.5" aria-hidden="true" />
+                  <Activity className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                   <span>{activeBranch.edgeNodeOnline ? 'Edge Online' : 'Edge Offline'}</span>
                 </div>
               ) : null}
@@ -350,13 +339,17 @@ export function PortalShell({
                 type="button"
                 onClick={onToggleLightMode}
                 aria-label={lightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-                className={`flex h-12 w-12 items-center justify-center rounded-xl border transition-colors ${
+                className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-colors ${
                   lightMode
                     ? 'border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100'
                     : 'border-steel bg-obsidian text-chrome hover:text-chalk'
                 }`}
               >
-                {lightMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                {lightMode ? (
+                  <Moon className="h-5 w-5" strokeWidth={1.75} />
+                ) : (
+                  <Sun className="h-5 w-5" strokeWidth={1.75} />
+                )}
               </button>
             </div>
           </div>

@@ -469,3 +469,33 @@ export interface AiChatResponse {
   action?: AiDomAction;
   citations: string[];
 }
+
+// ==================== BRANCHES & FREE PASS LEADS ====================
+export interface BranchCoachSummary {
+  id: string;
+  fullName: string;
+  specialty: string;
+  branchCode: string;
+}
+
+export const FreePassLeadSchema = z.object({
+  fullName: z.string().trim().min(2).max(100),
+  phone: z
+    .string()
+    .trim()
+    .regex(
+      /^\+8801[3-9]\d{8}$/,
+      'Valid Bangladesh mobile (+8801XXXXXXXXX) required',
+    ),
+  branchId: z.string().uuid(),
+  preferredVisitWindow: z.enum(['MORNING', 'OFF_PEAK_1_3PM', 'EVENING']),
+  goal: z.string().trim().max(200).optional(),
+});
+export type FreePassLeadDto = z.infer<typeof FreePassLeadSchema>;
+
+export interface FreePassLeadResponse {
+  id: string;
+  referenceCode: string;
+  branchName: string;
+  message: string;
+}

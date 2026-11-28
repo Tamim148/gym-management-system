@@ -11,9 +11,9 @@ import {
   Bot,
   CheckCircle2,
   Loader2,
+  MessageSquare,
   Send,
   ShieldAlert,
-  Sparkles,
   X,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -237,42 +237,50 @@ export function AiConciergeWidget() {
     void sendPrompt(input);
   }
 
+  const isMemberRoute = pathname?.startsWith('/member');
+  const positionClass = isMemberRoute
+    ? 'bottom-24 right-4 md:bottom-6 md:right-6'
+    : 'bottom-4 right-4 md:bottom-6 md:right-6';
+
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+    <div className={`fixed z-40 flex flex-col items-end gap-3 ${positionClass}`}>
       {isOpen && (
         <section
           role="dialog"
           aria-label="Vintage Aesthetics AI Concierge"
           data-testid="ai-concierge-drawer"
-          className="flex h-[520px] w-[min(92vw,390px)] flex-col overflow-hidden rounded-2xl border border-steel bg-iron/95 shadow-2xl backdrop-blur-xl"
+          className="flex h-[500px] w-[min(92vw,384px)] flex-col overflow-hidden rounded-2xl border border-steel bg-iron shadow-2xl"
         >
           {/* Header */}
-          <header className="flex items-center justify-between border-b border-steel bg-gradient-to-r from-oxblood-deep via-oxblood to-iron px-4 py-3">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-chalk/20 bg-obsidian/70 text-crimson">
-                <Bot className="h-5 w-5" />
+          <header className="border-b border-steel bg-oxblood-deep">
+            <div className="va-led-rule w-full" />
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-silver/25 bg-obsidian text-crimson">
+                  <Bot className="h-5 w-5" strokeWidth={1.75} />
+                </div>
+                <div>
+                  <h2 className="font-display text-lg font-bold uppercase tracking-wide text-chalk">
+                    Iron Concierge
+                  </h2>
+                  <p className="text-[11px] text-silver">
+                    Policy &amp; 1-Tap Booking Assistant
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-display text-lg font-bold uppercase tracking-wide text-chalk">
-                  Iron Concierge AI
-                </h2>
-                <p className="text-[11px] text-silver">
-                  RAG Policy &amp; 1-Tap Booking Assistant
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                aria-label="Close AI Concierge"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-steel bg-obsidian text-chrome transition hover:text-chalk"
+              >
+                <X className="h-4 w-4" strokeWidth={1.75} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close AI Concierge"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-steel/70 bg-obsidian/50 text-chrome transition hover:text-chalk"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </header>
 
           {/* Quick Chips */}
-          <div className="flex gap-1.5 overflow-x-auto border-b border-steel/70 bg-obsidian/60 px-3 py-2">
+          <div className="flex gap-1.5 overflow-x-auto border-b border-steel bg-obsidian px-3 py-2">
             {QUICK_PROMPTS.map((q) => (
               <button
                 key={q}
@@ -303,12 +311,12 @@ export function AiConciergeWidget() {
                         ? 'bg-crimson text-chalk'
                         : isSecurityRefusal
                           ? 'border border-access-denied/60 bg-access-denied/10 text-chalk'
-                          : 'border border-steel bg-obsidian/90 text-silver'
+                          : 'border border-steel bg-obsidian text-silver'
                     }`}
                   >
                     {isSecurityRefusal && (
-                      <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-access-denied">
-                        <ShieldAlert className="h-3.5 w-3.5" />
+                      <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-access-denied">
+                        <ShieldAlert className="h-3.5 w-3.5" strokeWidth={1.75} />
                         Security Policy Guard
                       </div>
                     )}
@@ -343,14 +351,14 @@ export function AiConciergeWidget() {
                           className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-oxblood bg-oxblood/30 px-3 py-1.5 text-xs font-semibold text-chalk transition hover:bg-oxblood/60"
                         >
                           <span>{msg.action.label}</span>
-                          <ArrowRight className="h-3.5 w-3.5" />
+                          <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
                         </button>
                       )}
 
                     {/* 1-Tap Confirmation Card for Write Intents */}
                     {msg.action?.type === 'CONFIRM_WRITE' && (
                       <div className="mt-2.5 rounded-lg border border-access-warn/50 bg-access-warn/10 p-2.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-access-warn">
+                        <p className="text-[11px] font-semibold text-access-warn">
                           1-Tap Action Confirmation
                         </p>
                         <p className="mt-0.5 text-xs text-chalk">
@@ -358,7 +366,7 @@ export function AiConciergeWidget() {
                         </p>
                         {msg.confirmed ? (
                           <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-access-ok">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
                             Confirmed &amp; Executed
                           </div>
                         ) : (
@@ -373,12 +381,12 @@ export function AiConciergeWidget() {
                           >
                             {confirmingId === msg.id ? (
                               <>
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />
                                 Confirming...
                               </>
                             ) : (
                               <>
-                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
                                 Confirm &amp; Execute
                               </>
                             )}
@@ -392,7 +400,7 @@ export function AiConciergeWidget() {
             })}
             {loading && (
               <div className="flex items-center gap-2 text-xs text-chrome">
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-crimson" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-crimson" strokeWidth={1.75} />
                 <span>Consulting gym policy &amp; live schedule...</span>
               </div>
             )}
@@ -402,7 +410,7 @@ export function AiConciergeWidget() {
           {/* Input Bar */}
           <form
             onSubmit={handleSubmit}
-            className="border-t border-steel bg-obsidian/90 p-3"
+            className="border-t border-steel bg-obsidian p-3"
           >
             <div className="flex items-center gap-2">
               <input
@@ -420,29 +428,29 @@ export function AiConciergeWidget() {
                 aria-label="Send message"
                 className="flex h-[42px] w-[42px] items-center justify-center rounded-xl bg-crimson text-chalk transition hover:bg-crimson-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-4 w-4" strokeWidth={1.75} />
               </button>
             </div>
             <div className="mt-1 flex items-center justify-between text-[10px] text-chrome">
-              <span>Zero-Cost Gemini / Local Mock</span>
+              <span>Gemini / Local Mock Concierge</span>
               <span>{input.length}/500</span>
             </div>
           </form>
         </section>
       )}
 
-      {/* Floating Oxblood/Crimson Orb */}
+      {/* Floating Concierge Trigger */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         data-testid="ai-concierge-orb"
         aria-label={isOpen ? 'Close AI Concierge' : 'Open AI Concierge'}
-        className="group flex h-14 w-14 items-center justify-center rounded-full border border-chalk/20 bg-gradient-to-br from-crimson via-oxblood to-oxblood-deep text-chalk shadow-[0_10px_30px_rgba(220,30,38,0.45)] transition hover:scale-105 hover:from-crimson-hover"
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-crimson bg-oxblood text-chalk shadow-xl transition-colors hover:bg-crimson md:h-14 md:w-14"
       >
         {isOpen ? (
-          <X className="h-6 w-6" />
+          <X className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.75} />
         ) : (
-          <Sparkles className="h-6 w-6 transition group-hover:rotate-12" />
+          <MessageSquare className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.75} />
         )}
       </button>
     </div>

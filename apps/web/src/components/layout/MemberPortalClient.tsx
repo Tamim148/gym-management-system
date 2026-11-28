@@ -17,14 +17,13 @@ import {
   LogOut,
   QrCode,
   Snowflake,
-  Sparkles,
+  Tag,
   User,
   Users,
   WifiOff,
 } from 'lucide-react';
 import {
   BookingStatus,
-  PaymentStatus,
   SessionType,
   type AuthUserProfile,
   type BookSessionResponse,
@@ -44,6 +43,7 @@ import type {
 } from '@/lib/types';
 import { MetallicQrPassCard } from '@/components/cards/MetallicQrPassCard';
 import { MockCheckoutModal } from '@/components/billing/MockCheckoutModal';
+import { BrandCrest } from '@/components/ui/BrandCrest';
 import { Modal } from '@/components/ui/Modal';
 import { SkeletonBlock } from '@/components/ui/Skeleton';
 import { PaymentStatusBadge } from '@/components/ui/StatusBadge';
@@ -54,6 +54,14 @@ export type MemberTab = 'home' | 'schedule' | 'pass' | 'workouts' | 'profile';
 interface MemberPortalClientProps {
   initialTab?: MemberTab;
 }
+
+const TAB_ROUTES: Record<MemberTab, string> = {
+  home: '/member',
+  schedule: '/member/schedule',
+  pass: '/member/pass',
+  workouts: '/member/workouts',
+  profile: '/member/profile',
+};
 
 export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientProps) {
   const router = useRouter();
@@ -85,6 +93,13 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+
+  const switchTab = (tab: MemberTab) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', TAB_ROUTES[tab]);
+    }
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -333,24 +348,18 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
       {/* Offline Banner */}
       {browserOffline || branches.some((b) => !b.edgeNodeOnline) ? (
         <div className="flex items-center justify-center gap-2 bg-amber-500 px-3 py-2 text-xs font-bold uppercase text-zinc-950">
-          <WifiOff className="h-4 w-4" />
+          <WifiOff className="h-4 w-4" strokeWidth={1.75} />
           Offline Mode — Local Queue Active (QR Pass Cached)
         </div>
       ) : null}
 
       {/* Top Mobile PWA Header */}
-      <header className="sticky top-0 z-20 border-b border-steel bg-obsidian/95 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-20 border-b border-steel bg-obsidian px-4 py-3">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2.5">
-            <Image
-              src="/images/logo.png"
-              alt="Vintage Aesthetics Crest"
-              width={38}
-              height={38}
-              className="rounded-full border border-chrome/40 bg-iron p-0.5"
-            />
+            <BrandCrest size={38} />
             <div>
-              <p className="font-display text-lg font-extrabold uppercase leading-none">
+              <p className="font-display text-lg font-extrabold uppercase leading-none text-chalk">
                 Vintage Aesthetics
               </p>
               <p className="text-[11px] text-chrome">{user.fullName}</p>
@@ -358,9 +367,8 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
           </Link>
 
           <div className="flex items-center gap-2">
-            {/* Membership Pill */}
             {daysRemaining !== null && daysRemaining > 0 ? (
-              <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-400">
+              <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-400 tabular-nums">
                 {daysRemaining} Days Left
               </span>
             ) : (
@@ -378,69 +386,97 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
 
       {/* Main Content Container */}
       <main className="mx-auto max-w-2xl space-y-5 px-4 pt-5">
-        {/* Branch Selector */}
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-steel bg-iron p-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-chrome">Branch</span>
+        {/* Gold's Gym Style Branch Switcher */}
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-steel bg-iron px-3.5 py-2.5">
+          <span className="text-xs font-bold text-chrome">Active Club</span>
           <select
             value={selectedBranchId}
             onChange={(e) => void handleBranchChange(e.target.value)}
-            className="min-h-[44px] flex-1 rounded-lg border border-steel bg-obsidian px-3 text-xs font-bold text-chalk outline-none focus:border-crimson"
+            aria-label="Select branch"
+            className="min-h-[42px] flex-1 rounded-lg border border-steel bg-obsidian px-3 text-xs font-bold text-chalk outline-none focus:border-crimson"
           >
             {branches.map((b) => (
               <option key={b.id} value={b.id}>
-                {b.code} • {b.name}
+                {b.code} · {b.name}
               </option>
             ))}
           </select>
         </div>
 
-        {/* TAB 1: HOME */}
+        {/* TAB 1: PLANET FITNESS STYLE HOME */}
         {activeTab === 'home' ? (
           <div className="space-y-4">
-            {/* Live Gym Crowd Meter */}
-            <section className="va-card rounded-2xl p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-widest text-chrome">
-                  Live Gym Crowd Meter
-                </p>
-                <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400">
-                  {crowdStats.label} • {crowdStats.pct}% Full
-                </span>
-              </div>
-              <p className="font-display mt-2 text-3xl font-extrabold uppercase">
-                {activeBranch?.name ?? 'Dhaka Branch'}
-              </p>
-              <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-obsidian">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-crimson transition-all"
-                  style={{ width: `${crowdStats.pct}%` }}
+            {/* Real-Time Crowd Meter + 1-Tap QR Pass Action */}
+            <section className="overflow-hidden rounded-2xl border border-steel bg-iron">
+              <div className="va-led-rule w-full" />
+              <div className="relative h-32 w-full overflow-hidden border-b border-steel">
+                <Image
+                  src="/images/strength-station.jpg"
+                  alt="Strength zone at Vintage Aesthetics Gym"
+                  fill
+                  className="object-cover object-center"
                 />
+                <div className="absolute inset-0 bg-linear-to-t from-[#141418] via-[#141418]/70 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 px-5 pb-3">
+                  <div>
+                    <p className="text-[11px] font-semibold text-silver">
+                      Live Floor Crowd Meter
+                    </p>
+                    <p className="font-display text-2xl font-extrabold uppercase text-chalk">
+                      {activeBranch?.name ?? 'Dhaka Branch'}
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-emerald-500/40 bg-obsidian/90 px-2.5 py-1 text-xs font-bold text-emerald-400 tabular-nums">
+                    {crowdStats.label} · {crowdStats.pct}%
+                  </span>
+                </div>
               </div>
-              <p className="mt-2 text-xs text-chrome">
-                {activeBranch?.currentOccupancy ?? 0} of {activeBranch?.maxOccupancy ?? 80} members inside right now
-              </p>
+
+              <div className="space-y-4 p-5">
+                <div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-obsidian">
+                    <div
+                      className="h-full rounded-full bg-linear-to-r from-emerald-500 via-amber-500 to-crimson transition-all"
+                      style={{ width: `${crowdStats.pct}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-chrome tabular-nums">
+                    {activeBranch?.currentOccupancy ?? 0} of {activeBranch?.maxOccupancy ?? 80} members inside right now
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => switchTab('pass')}
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-crimson text-xs font-bold uppercase tracking-wider text-chalk transition-colors hover:bg-crimson-hover"
+                >
+                  <QrCode className="h-4 w-4" strokeWidth={1.75} />
+                  Open 1-Tap Gate QR Pass
+                </button>
+              </div>
             </section>
 
-            {/* Festival Promo Banner */}
+            {/* Festival Offer Banner */}
             {topCampaign ? (
-              <section className="va-hero-gradient rounded-2xl border border-oxblood p-5 shadow-xl">
-                <div className="flex items-start justify-between gap-3">
+              <section className="overflow-hidden rounded-2xl border border-oxblood bg-iron">
+                <div className="va-led-rule w-full" />
+                <div className="flex items-start justify-between gap-3 p-5">
                   <div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-crimson px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-                      <Sparkles className="h-3 w-3" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-crimson/50 bg-oxblood/40 px-2.5 py-0.5 text-[11px] font-bold text-chalk">
+                      <Tag className="h-3 w-3 text-crimson" strokeWidth={1.75} />
                       Festival Offer
                     </span>
-                    <h2 className="font-display mt-2 text-2xl font-extrabold uppercase">
+                    <h2 className="font-display mt-2 text-2xl font-extrabold uppercase text-chalk">
                       {topCampaign.name}
                     </h2>
                     <p className="mt-1 text-xs text-silver">
-                      Apply code <strong className="font-mono text-amber-300">{topCampaign.promoCode}</strong> at checkout.
+                      Apply code <strong className="font-mono text-amber-400">{topCampaign.promoCode}</strong> at checkout.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCheckoutOpen(true)}
-                    className="min-h-[48px] shrink-0 rounded-xl bg-crimson px-4 text-xs font-bold uppercase text-chalk hover:bg-crimson-hover"
+                    className="min-h-11 shrink-0 rounded-xl bg-crimson px-4 text-xs font-bold uppercase text-chalk hover:bg-crimson-hover"
                   >
                     Claim
                   </button>
@@ -448,10 +484,29 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
               </section>
             ) : null}
 
-            {/* Next Booked Session + Chrome Laurel Streak Badge */}
+            {/* My Journey Streak + Next Booked Session */}
             <div className="grid gap-4 sm:grid-cols-2">
               <section className="va-card rounded-2xl p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-chrome">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-chrome">
+                    My Journey Streak
+                  </p>
+                  <Award className="h-5 w-5 text-silver" strokeWidth={1.75} />
+                </div>
+                <div className="mt-2 flex items-baseline gap-2 tabular-nums">
+                  <span className="font-display text-4xl font-extrabold text-chalk">
+                    {user.loyaltyPoints}
+                  </span>
+                  <span className="text-xs font-bold text-chrome">Iron Points</span>
+                </div>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-amber-400 tabular-nums">
+                  <Flame className="h-4 w-4" strokeWidth={1.75} />
+                  Health Consistency: {Math.round(user.healthScore)}%
+                </p>
+              </section>
+
+              <section className="va-card rounded-2xl p-4">
+                <p className="text-xs font-bold text-chrome">
                   Next Booked Session
                 </p>
                 {nextBookedSession ? (
@@ -460,7 +515,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                       {nextBookedSession.title}
                     </p>
                     <p className="text-xs text-silver">
-                      {nextBookedSession.trainerName} •{' '}
+                      {nextBookedSession.trainerName} ·{' '}
                       {new Date(nextBookedSession.startTime).toLocaleString()}
                     </p>
                     <span className="mt-1 inline-block rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-400">
@@ -472,32 +527,13 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                     <p className="text-xs text-chrome">No upcoming classes booked.</p>
                     <button
                       type="button"
-                      onClick={() => setActiveTab('schedule')}
-                      className="min-h-[44px] rounded-xl border border-crimson bg-crimson/15 px-3 text-xs font-bold uppercase text-crimson hover:bg-crimson hover:text-chalk"
+                      onClick={() => switchTab('schedule')}
+                      className="min-h-[42px] rounded-xl border border-crimson bg-crimson/15 px-3 text-xs font-bold uppercase text-chalk hover:bg-crimson"
                     >
-                      Browse Classes →
+                      Browse Classes
                     </button>
                   </div>
                 )}
-              </section>
-
-              <section className="va-card rounded-2xl border-chrome/30 bg-gradient-to-br from-iron to-[#1F1F26] p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wider text-chrome">
-                    Chrome Laurel Streak
-                  </p>
-                  <Award className="h-6 w-6 text-silver" />
-                </div>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="font-display text-4xl font-extrabold text-chalk">
-                    {user.loyaltyPoints}
-                  </span>
-                  <span className="text-xs font-bold uppercase text-chrome">Iron Points</span>
-                </div>
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-amber-400">
-                  <Flame className="h-4 w-4" />
-                  Health Consistency Score: {Math.round(user.healthScore)}%
-                </p>
               </section>
             </div>
           </div>
@@ -519,7 +555,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                   key={f.id}
                   type="button"
                   onClick={() => setScheduleFilter(f.id)}
-                  className={`min-h-[44px] rounded-xl border px-3.5 text-xs font-bold uppercase ${
+                  className={`min-h-[42px] rounded-xl border px-3.5 text-xs font-bold uppercase ${
                     scheduleFilter === f.id
                       ? 'border-crimson bg-crimson text-chalk'
                       : 'border-steel bg-iron text-chrome hover:text-chalk'
@@ -544,12 +580,12 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded bg-oxblood px-2 py-0.5 text-[10px] font-bold uppercase">
+                            <span className="rounded bg-oxblood px-2 py-0.5 text-[10px] font-bold uppercase text-chalk">
                               {session.type.replace('_', ' ')}
                             </span>
                             {session.isOffPeakDeal ? (
                               <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-400">
-                                Off-Peak Deal • {session.offPeakPriceBdt ? formatBdt(session.offPeakPriceBdt) : '25% Off'}
+                                Off-Peak Deal · {session.offPeakPriceBdt ? formatBdt(session.offPeakPriceBdt) : '25% Off'}
                               </span>
                             ) : null}
                           </div>
@@ -557,15 +593,15 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                             {session.title}
                           </h3>
                           <p className="text-xs text-chrome">
-                            {session.trainerName} • {session.zoneName ?? 'Main Floor'}
+                            {session.trainerName} · {session.zoneName ?? 'Main Floor'}
                           </p>
                           <p className="mt-1 flex items-center gap-1.5 text-xs text-silver">
-                            <Clock className="h-3.5 w-3.5 text-crimson" />
+                            <Clock className="h-3.5 w-3.5 text-crimson" strokeWidth={1.75} />
                             {new Date(session.startTime).toLocaleString()}
                           </p>
                         </div>
 
-                        <div className="text-right">
+                        <div className="text-right tabular-nums">
                           <p className="font-display text-xl font-extrabold">
                             {session.confirmedCount}/{session.maxCapacity}
                           </p>
@@ -581,7 +617,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                             type="button"
                             disabled={submitting}
                             onClick={() => void handleCancelBooking(session.myBookingId!)}
-                            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-[#FF2A3B]/60 bg-[#FF2A3B]/10 text-xs font-bold uppercase text-[#FF2A3B] hover:bg-[#FF2A3B]/20"
+                            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#FF2A3B]/60 bg-[#FF2A3B]/10 text-xs font-bold uppercase text-[#FF2A3B] hover:bg-[#FF2A3B]/20"
                           >
                             Cancel {session.myBookingStatus} Booking
                           </button>
@@ -590,7 +626,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                             type="button"
                             disabled={submitting}
                             onClick={() => void handleBookSession(session.id)}
-                            className={`flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
+                            className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
                               isFull
                                 ? 'border border-amber-500 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
                                 : 'bg-crimson text-chalk hover:bg-crimson-hover'
@@ -625,7 +661,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
             <section className="va-card rounded-2xl p-5">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <KeyRound className="h-5 w-5 text-crimson" />
+                  <KeyRound className="h-5 w-5 text-crimson" strokeWidth={1.75} />
                   <h2 className="font-display text-xl font-bold uppercase">Smart Locker Status</h2>
                 </div>
                 {myClaimedLocker ? (
@@ -651,8 +687,8 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                         mine
                           ? 'border-crimson bg-oxblood/50 text-chalk'
                           : taken
-                            ? 'border-steel bg-obsidian/50 text-zinc-600 opacity-60'
-                            : 'border-steel bg-iron text-silver hover:border-crimson'
+                            ? 'border-steel bg-obsidian text-zinc-600 opacity-60'
+                            : 'border-steel bg-obsidian text-silver hover:border-crimson'
                       }`}
                     >
                       <span>{locker.lockerNumber}</span>
@@ -672,7 +708,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
           <div className="space-y-4">
             <section className="va-card rounded-2xl p-5">
               <h2 className="font-display text-2xl font-bold uppercase">
-                Workout & Attendance Log
+                Workout &amp; Attendance Log
               </h2>
               <p className="mt-1 text-xs text-chrome">
                 Recent verified gym check-ins and iron consistency streaks.
@@ -681,19 +717,19 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
               <div className="mt-4 space-y-2.5">
                 {(quickProfile?.recentAttendance ?? []).length === 0 ? (
                   <p className="text-xs text-chrome">
-                    No check-ins recorded yet. Scan your QR Pass at the gate or /simulator!
+                    No check-ins recorded yet. Scan your QR Pass at the gate or /simulator.
                   </p>
                 ) : (
                   quickProfile!.recentAttendance.map((att) => (
                     <div
                       key={att.id}
-                      className="flex items-center justify-between rounded-xl border border-steel bg-obsidian/70 px-4 py-3 text-xs"
+                      className="flex items-center justify-between rounded-xl border border-steel bg-obsidian px-4 py-3 text-xs"
                     >
                       <span className="flex items-center gap-2 font-bold">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" strokeWidth={1.75} />
                         {att.entryStatus}
                       </span>
-                      <span className="font-mono text-chrome">
+                      <span className="font-mono text-chrome tabular-nums">
                         {new Date(att.scannedAt).toLocaleString()}
                       </span>
                     </div>
@@ -712,7 +748,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                 <div>
                   <h2 className="font-display text-2xl font-bold uppercase">{user.fullName}</h2>
                   <p className="text-xs text-chrome">
-                    {user.email ?? user.phone} • {user.status}
+                    {user.email ?? user.phone} · {user.status}
                   </p>
                 </div>
                 {currentSubscription ? (
@@ -721,7 +757,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
               </div>
 
               {(currentSubscription || quickProfile?.subscription) ? (
-                <div className="rounded-xl border border-steel bg-obsidian/70 p-4 text-xs">
+                <div className="rounded-xl border border-steel bg-obsidian p-4 text-xs">
                   <p className="font-bold uppercase text-chalk">
                     {currentSubscription?.planName ??
                       currentSubscription?.plan?.name ??
@@ -735,7 +771,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                   </p>
                   {(currentSubscription?.dueAmountBdt ?? quickProfile?.subscription?.dueAmountBdt ?? 0) >
                   0 ? (
-                    <p className="mt-1 font-bold text-[#FF2A3B]">
+                    <p className="mt-1 font-bold text-[#FF2A3B] tabular-nums">
                       Due Balance:{' '}
                       {formatBdt(
                         currentSubscription?.dueAmountBdt ??
@@ -750,7 +786,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                 <button
                   type="button"
                   onClick={() => setPlanPickerOpen(true)}
-                  className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-crimson text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-crimson text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
                 >
                   Renew / Upgrade Plan
                 </button>
@@ -758,9 +794,9 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                   type="button"
                   disabled={!currentSubscription && !quickProfile?.subscription}
                   onClick={() => setFreezeOpen(true)}
-                  className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-sky-400/50 bg-sky-500/10 text-xs font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-500/20 disabled:opacity-50"
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-silver/40 bg-obsidian text-xs font-bold uppercase tracking-wider text-silver hover:border-crimson hover:text-chalk disabled:opacity-50"
                 >
-                  <Snowflake className="h-4 w-4" />
+                  <Snowflake className="h-4 w-4" strokeWidth={1.75} />
                   Freeze Plan
                 </button>
               </div>
@@ -769,7 +805,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
             {/* Family Sub-Accounts */}
             <section className="va-card rounded-2xl p-5">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-crimson" />
+                <Users className="h-5 w-5 text-crimson" strokeWidth={1.75} />
                 <h3 className="font-display text-xl font-bold uppercase">
                   Family Sub-Accounts (15% Off)
                 </h3>
@@ -783,7 +819,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                   {familyAccounts.map((dep) => (
                     <div
                       key={dep.id}
-                      className="flex items-center justify-between rounded-xl border border-steel bg-obsidian/70 px-3.5 py-2.5 text-xs"
+                      className="flex items-center justify-between rounded-xl border border-steel bg-obsidian px-3.5 py-2.5 text-xs"
                     >
                       <span className="font-bold text-chalk">{dep.fullName}</span>
                       <span className="text-chrome">{dep.phone}</span>
@@ -796,10 +832,10 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
             <button
               type="button"
               onClick={() => void handleLogout()}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-steel bg-iron text-xs font-bold uppercase tracking-wider text-silver hover:border-crimson hover:text-chalk"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-steel bg-iron text-xs font-bold uppercase tracking-wider text-silver hover:border-crimson hover:text-chalk"
             >
-              <LogOut className="h-4 w-4" />
-              Sign Out & Wipe Offline Pass
+              <LogOut className="h-4 w-4" strokeWidth={1.75} />
+              Sign Out &amp; Wipe Offline Pass
             </button>
           </div>
         ) : null}
@@ -808,7 +844,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
       {/* 5-Tab Mobile Bottom Navigation */}
       <nav
         aria-label="Member Mobile Navigation"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-steel bg-iron/95 px-2 pb-safe backdrop-blur-md"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-steel bg-iron px-2 pb-safe"
       >
         <div className="mx-auto grid max-w-2xl grid-cols-5 items-center gap-1 py-1.5">
           {(
@@ -827,14 +863,14 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => switchTab(tab.id)}
                   className={`mx-auto -mt-5 flex h-14 w-14 flex-col items-center justify-center rounded-2xl border-2 shadow-xl transition-transform ${
                     active
-                      ? 'border-chalk bg-crimson text-chalk scale-105'
-                      : 'border-chrome/40 bg-oxblood text-chalk hover:bg-crimson'
+                      ? 'scale-105 border-chalk bg-crimson text-chalk'
+                      : 'border-silver/40 bg-oxblood text-chalk hover:bg-crimson'
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5" strokeWidth={1.75} />
                   <span className="mt-0.5 text-[9px] font-extrabold uppercase">Pass</span>
                 </button>
               );
@@ -843,12 +879,12 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex min-h-[48px] flex-col items-center justify-center rounded-xl text-[11px] font-bold transition-colors ${
+                onClick={() => switchTab(tab.id)}
+                className={`flex min-h-12 flex-col items-center justify-center rounded-xl text-[11px] font-bold transition-colors ${
                   active ? 'text-crimson' : 'text-chrome hover:text-chalk'
                 }`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" strokeWidth={1.75} />
                 <span className="mt-0.5">{tab.label}</span>
               </button>
             );
@@ -877,7 +913,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
                 }`}
               >
                 <p className="font-display text-lg font-bold uppercase">{p.name}</p>
-                <p className="text-sm font-extrabold text-crimson">{formatBdt(p.priceBdt)}</p>
+                <p className="text-sm font-extrabold text-crimson tabular-nums">{formatBdt(p.priceBdt)}</p>
               </button>
             ))}
           </div>
@@ -888,9 +924,9 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
               setPlanPickerOpen(false);
               setCheckoutOpen(true);
             }}
-            className="flex min-h-[48px] w-full items-center justify-center rounded-xl bg-crimson text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-crimson text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
           >
-            Continue to Mock Checkout →
+            Continue to Mock Checkout
           </button>
         </div>
       </Modal>
@@ -914,7 +950,7 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
       >
         <form onSubmit={handleFreezePlan} className="space-y-4">
           <label className="block">
-            <span className="mb-1.5 block text-xs font-bold uppercase text-chrome">
+            <span className="mb-1.5 block text-xs font-semibold text-chrome">
               Freeze Duration (3–30 Days)
             </span>
             <input
@@ -924,26 +960,26 @@ export function MemberPortalClient({ initialTab = 'home' }: MemberPortalClientPr
               required
               value={freezeDays}
               onChange={(e) => setFreezeDays(e.target.value)}
-              className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-4 text-sm font-bold text-chalk"
+              className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-4 text-sm font-bold text-chalk"
             />
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-xs font-bold uppercase text-chrome">
+            <span className="mb-1.5 block text-xs font-semibold text-chrome">
               Reason (Optional)
             </span>
             <input
               type="text"
               value={freezeReason}
               onChange={(e) => setFreezeReason(e.target.value)}
-              className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk"
+              className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-4 text-sm text-chalk"
             />
           </label>
           <button
             type="submit"
             disabled={submitting}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-sky-600 text-sm font-bold uppercase text-white hover:bg-sky-500 disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-oxblood text-sm font-bold uppercase text-chalk transition-colors hover:bg-crimson disabled:opacity-50"
           >
-            <Lock className="h-4 w-4" />
+            <Lock className="h-4 w-4" strokeWidth={1.75} />
             {submitting ? 'Freezing...' : 'Confirm Membership Freeze'}
           </button>
         </form>

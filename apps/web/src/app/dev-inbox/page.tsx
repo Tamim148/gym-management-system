@@ -16,9 +16,9 @@ import {
   Send,
   Smartphone,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { BrandCrest } from '@/components/ui/BrandCrest';
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:4000';
@@ -105,60 +105,63 @@ export default function DevInboxPage() {
   }
 
   return (
-    <main className="min-h-screen bg-obsidian px-4 py-8 text-chalk md:px-8">
+    <main className="min-h-screen bg-obsidian px-4 pt-6 pb-24 text-chalk md:px-8 md:py-8">
       <div className="mx-auto max-w-6xl space-y-6">
         {/* Header */}
-        <header className="va-card va-hero-gradient flex flex-col justify-between gap-4 rounded-2xl p-6 md:flex-row md:items-center">
-          <div className="flex items-center gap-4">
-            <Image
-              src="/images/logo.png"
-              alt="Vintage Aesthetics Gym"
-              width={56}
-              height={56}
-              className="rounded-full border border-steel bg-obsidian p-1"
-            />
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-chrome">
-                Zero-Cost Notification Previewer ($0 Stack)
-              </p>
-              <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight text-chalk md:text-4xl">
-                Free Dev Notification Inbox
-              </h1>
+        <header className="overflow-hidden rounded-2xl border border-steel bg-iron">
+          <div className="va-led-rule w-full" />
+          <div className="flex flex-col justify-between gap-4 p-5 md:flex-row md:items-center">
+            <div className="flex items-center gap-3.5">
+              <Link href="/" aria-label="Back to Storefront">
+                <BrandCrest size={50} />
+              </Link>
+              <div>
+                <p className="text-xs font-medium text-chrome">
+                  Local Notification Dispatch Viewer
+                </p>
+                <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight text-chalk md:text-4xl">
+                  Free Dev Notification Inbox
+                </h1>
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => void loadInbox()}
-              disabled={loading}
-              className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-crimson px-4 text-xs font-bold uppercase tracking-wider text-chalk transition hover:bg-crimson-hover disabled:opacity-60"
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-              />
-              Refresh Inbox
-            </button>
-            <Link
-              href="/simulator"
-              className="inline-flex min-h-[42px] items-center rounded-xl border border-steel bg-iron px-4 text-xs font-semibold uppercase tracking-wider text-silver transition hover:border-crimson hover:text-chalk"
-            >
-              Hardware Simulator
-            </Link>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => void loadInbox()}
+                disabled={loading}
+                className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-crimson px-4 text-xs font-bold uppercase tracking-wider text-chalk transition hover:bg-crimson-hover disabled:opacity-60"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                  strokeWidth={1.75}
+                />
+                Refresh Inbox
+              </button>
+              <Link
+                href="/simulator"
+                className="inline-flex min-h-[42px] items-center rounded-xl border border-steel bg-obsidian px-4 text-xs font-semibold uppercase tracking-wider text-silver transition hover:border-crimson hover:text-chalk"
+              >
+                Hardware Simulator
+              </Link>
+            </div>
           </div>
         </header>
 
         {/* Filters */}
         <section className="va-card grid gap-3 rounded-2xl p-4 md:grid-cols-4">
           <div className="relative md:col-span-2">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-chrome" />
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-chrome"
+              strokeWidth={1.75}
+            />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search OTPs, receipts, member names, or payload..."
+              placeholder="Search OTPs, receipts, members..."
               aria-label="Search notifications"
-              className="min-h-[44px] w-full rounded-xl border border-steel bg-obsidian pl-9 pr-3 text-sm text-chalk placeholder:text-chrome/60 focus:border-crimson focus:outline-none"
+              className="min-h-11 w-full rounded-xl border border-steel bg-obsidian pl-9 pr-3 text-sm text-chalk placeholder:text-chrome/60 focus:border-crimson focus:outline-none"
             />
           </div>
 
@@ -166,7 +169,7 @@ export default function DevInboxPage() {
             value={channelFilter}
             onChange={(e) => setChannelFilter(e.target.value)}
             aria-label="Filter by channel"
-            className="min-h-[44px] rounded-xl border border-steel bg-obsidian px-3 text-sm text-chalk focus:border-crimson focus:outline-none"
+            className="min-h-11 rounded-xl border border-steel bg-obsidian px-3 text-sm text-chalk focus:border-crimson focus:outline-none"
           >
             {CHANNELS.map((ch) => (
               <option key={ch} value={ch}>
@@ -179,7 +182,7 @@ export default function DevInboxPage() {
             value={triggerFilter}
             onChange={(e) => setTriggerFilter(e.target.value)}
             aria-label="Filter by trigger type"
-            className="min-h-[44px] rounded-xl border border-steel bg-obsidian px-3 text-sm text-chalk focus:border-crimson focus:outline-none"
+            className="min-h-11 rounded-xl border border-steel bg-obsidian px-3 text-sm text-chalk focus:border-crimson focus:outline-none"
           >
             {TRIGGERS.map((tr) => (
               <option key={tr} value={tr}>
@@ -202,13 +205,13 @@ export default function DevInboxPage() {
               {[1, 2, 3].map((n) => (
                 <div
                   key={n}
-                  className="va-card h-24 animate-pulse rounded-xl bg-iron/70"
+                  className="va-card h-24 animate-pulse rounded-xl bg-iron"
                 />
               ))}
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="va-card rounded-2xl p-10 text-center">
-              <Inbox className="mx-auto h-10 w-10 text-chrome" />
+              <Inbox className="mx-auto h-10 w-10 text-chrome" strokeWidth={1.75} />
               <h2 className="font-display mt-3 text-2xl font-bold uppercase text-chalk">
                 No Simulated Dispatches Yet
               </h2>
@@ -231,7 +234,7 @@ export default function DevInboxPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-steel bg-obsidian text-crimson">
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-5 w-5" strokeWidth={1.75} />
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -260,24 +263,24 @@ export default function DevInboxPage() {
                         >
                           {copiedId === item.id ? (
                             <>
-                              <Check className="h-3.5 w-3.5" />
+                              <Check className="h-3.5 w-3.5" strokeWidth={1.75} />
                               Copied {otpMatch[1]}
                             </>
                           ) : (
                             <>
-                              <Copy className="h-3.5 w-3.5" />
+                              <Copy className="h-3.5 w-3.5" strokeWidth={1.75} />
                               Copy OTP ({otpMatch[1]})
                             </>
                           )}
                         </button>
                       )}
-                      <time className="font-mono text-xs text-chrome">
+                      <time className="font-mono text-xs text-chrome tabular-nums">
                         {new Date(item.sentAt).toLocaleString()}
                       </time>
                     </div>
                   </div>
 
-                  <p className="mt-3 whitespace-pre-wrap break-words rounded-lg border border-steel/70 bg-obsidian p-3 text-sm text-silver">
+                  <p className="mt-3 whitespace-pre-wrap break-words rounded-lg border border-steel bg-obsidian p-3 text-sm text-silver">
                     {item.payload}
                   </p>
                 </article>

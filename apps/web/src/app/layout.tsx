@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   description:
     'Modern Golden Era Iron management ecosystem across Gulshan-1, Dhanmondi, and Uttara.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/images/logo.jpg',
+    apple: '/images/logo.jpg',
+  },
 };
 
 export const viewport: Viewport = {

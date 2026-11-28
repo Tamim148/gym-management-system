@@ -9,14 +9,15 @@ import {
   ArrowRight,
   Download,
   Flag,
+  Flame,
   Megaphone,
   Printer,
   QrCode,
   Send,
   Shield,
-  Sparkles,
   TrendingUp,
   Users,
+  WifiOff,
   Wrench,
 } from 'lucide-react';
 import {
@@ -281,16 +282,46 @@ export default function AdminPage() {
           href={csvExportUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-h-[48px] items-center gap-2 rounded-xl bg-crimson px-4 text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
+          className="flex min-h-12 items-center gap-2 rounded-xl bg-crimson px-4 text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
         >
           <Download className="h-4 w-4" />
           Export Transactions CSV
         </a>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 pb-20 md:pb-6">
+        {/* Sticky Section Jump Bar */}
+        <nav
+          aria-label="Admin Section Navigation"
+          className={`sticky top-[73px] z-10 flex items-center gap-2 overflow-x-auto rounded-xl border px-3 py-2 text-xs font-bold ${
+            lightMode
+              ? 'border-zinc-200 bg-white text-zinc-700'
+              : 'border-steel bg-iron text-chrome'
+          }`}
+        >
+          {[
+            { href: '#overview', label: 'Overview' },
+            { href: '#campaigns', label: 'Campaigns' },
+            { href: '#churn', label: 'Churn Radar' },
+            { href: '#maintenance', label: 'Maintenance' },
+            { href: '#security', label: 'Security & Flags' },
+          ].map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className={`shrink-0 rounded-lg px-3 py-1.5 transition-colors ${
+                lightMode
+                  ? 'hover:bg-zinc-100 hover:text-zinc-950'
+                  : 'hover:bg-obsidian hover:text-chalk'
+              }`}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
         {/* Executive KPI Strip */}
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <section id="overview" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
             {
               label: 'Total Revenue (MTD)',
@@ -319,7 +350,7 @@ export default function AdminPage() {
             {
               label: 'High Churn Alerts',
               value: String(kpis?.highChurnCount ?? 0),
-              icon: Sparkles,
+              icon: Flame,
               accent: 'text-crimson',
             },
           ].map((stat) => {
@@ -327,13 +358,13 @@ export default function AdminPage() {
             return (
               <div key={stat.label} className={`rounded-2xl border p-4 ${cardSurface}`}>
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs font-bold uppercase tracking-wider ${lightMode ? 'text-zinc-500' : 'text-chrome'}`}>
+                  <span className={`text-xs font-bold ${lightMode ? 'text-zinc-500' : 'text-chrome'}`}>
                     {stat.label}
                   </span>
-                  <Icon className={`h-5 w-5 ${stat.accent}`} />
+                  <Icon className={`h-5 w-5 ${stat.accent}`} strokeWidth={1.75} />
                 </div>
                 <p
-                  className={`font-display mt-2 text-3xl font-extrabold uppercase ${
+                  className={`font-display mt-2 text-3xl font-extrabold uppercase tabular-nums ${
                     stat.accent === 'text-chalk' && lightMode ? 'text-zinc-900' : stat.accent
                   }`}
                 >
@@ -358,15 +389,20 @@ export default function AdminPage() {
                     {b.branchCode}
                   </span>
                   <span
-                    className={`text-xs font-bold ${
+                    className={`inline-flex items-center gap-1.5 text-xs font-bold ${
                       b.edgeNodeOnline ? 'text-emerald-500' : 'text-amber-500'
                     }`}
                   >
-                    {b.edgeNodeOnline ? '● Edge Online' : '● Edge Offline'}
+                    {b.edgeNodeOnline ? (
+                      <Activity className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    ) : (
+                      <WifiOff className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    )}
+                    {b.edgeNodeOnline ? 'Edge Online' : 'Edge Offline'}
                   </span>
                 </div>
                 <h3 className="font-display mt-3 text-2xl font-bold uppercase">{b.branchName}</h3>
-                <div className="mt-3 flex items-baseline justify-between">
+                <div className="mt-3 flex items-baseline justify-between tabular-nums">
                   <span className={`text-xs ${lightMode ? 'text-zinc-500' : 'text-chrome'}`}>
                     MTD Revenue
                   </span>
@@ -375,7 +411,7 @@ export default function AdminPage() {
                   </span>
                 </div>
                 <div className="mt-3">
-                  <div className="flex justify-between text-xs font-semibold">
+                  <div className="flex justify-between text-xs font-semibold tabular-nums">
                     <span>Occupancy</span>
                     <span>
                       {b.currentOccupancy} / {b.maxOccupancy} ({pct}%)
@@ -394,7 +430,7 @@ export default function AdminPage() {
         </section>
 
         {/* Festival Campaign Builder + Live Oxblood/Crimson Mobile Banner Preview */}
-        <section className="grid gap-5 lg:grid-cols-12">
+        <section id="campaigns" className="grid gap-5 lg:grid-cols-12">
           <form
             onSubmit={handleCreateCampaign}
             className={`space-y-4 rounded-2xl border p-5 lg:col-span-7 ${cardSurface}`}
@@ -416,7 +452,7 @@ export default function AdminPage() {
                   required
                   value={campName}
                   onChange={(e) => setCampName(e.target.value)}
-                  className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm ${
+                  className={`min-h-12 w-full rounded-xl border px-3.5 text-sm ${
                     lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                   }`}
                 />
@@ -430,7 +466,7 @@ export default function AdminPage() {
                   required
                   value={campCode}
                   onChange={(e) => setCampCode(e.target.value.toUpperCase())}
-                  className={`min-h-[48px] w-full rounded-xl border px-3.5 font-mono text-sm uppercase ${
+                  className={`min-h-12 w-full rounded-xl border px-3.5 font-mono text-sm uppercase ${
                     lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                   }`}
                 />
@@ -442,7 +478,7 @@ export default function AdminPage() {
                 <select
                   value={campDiscountType}
                   onChange={(e) => setCampDiscountType(e.target.value as CampaignDiscountType)}
-                  className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm ${
+                  className={`min-h-12 w-full rounded-xl border px-3.5 text-sm ${
                     lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                   }`}
                 >
@@ -460,7 +496,7 @@ export default function AdminPage() {
                   min={1}
                   value={campDiscountValue}
                   onChange={(e) => setCampDiscountValue(e.target.value)}
-                  className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm font-bold ${
+                  className={`min-h-12 w-full rounded-xl border px-3.5 text-sm font-bold ${
                     lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                   }`}
                 />
@@ -474,7 +510,7 @@ export default function AdminPage() {
               <select
                 value={campBranchId}
                 onChange={(e) => setCampBranchId(e.target.value)}
-                className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm ${
+                className={`min-h-12 w-full rounded-xl border px-3.5 text-sm ${
                   lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                 }`}
               >
@@ -490,7 +526,7 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={campSubmitting}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
             >
               {campSubmitting ? 'Publishing...' : 'Launch Festival Offer'}
             </button>
@@ -513,27 +549,30 @@ export default function AdminPage() {
           {/* Live Mobile Banner Preview */}
           <div className={`flex flex-col justify-between rounded-2xl border p-5 lg:col-span-5 ${cardSurface}`}>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-chrome">
+              <p className="text-xs font-bold text-chrome">
                 Live Mobile PWA Preview
               </p>
-              <div className="mt-3 rounded-2xl border border-oxblood bg-gradient-to-br from-oxblood via-oxblood-deep to-obsidian p-5 text-chalk shadow-xl">
-                <span className="inline-block rounded-full bg-crimson px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-chalk">
-                  Limited Festival Drop
-                </span>
-                <h3 className="font-display mt-3 text-3xl font-extrabold uppercase leading-none">
-                  {campName || 'Festival Iron Offer'}
-                </h3>
-                <p className="mt-2 text-xs text-silver">
-                  Use code <strong className="font-mono text-amber-300">{campCode || 'PROMO'}</strong>{' '}
-                  at bKash/Nagad checkout for{' '}
-                  <strong>
-                    {campDiscountValue || '0'}
-                    {campDiscountType === CampaignDiscountType.PERCENTAGE ? '% OFF' : ' BDT OFF'}
-                  </strong>
-                  .
-                </p>
-                <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-crimson px-3.5 py-2 text-xs font-bold uppercase">
-                  Claim Offer <ArrowRight className="h-3.5 w-3.5" />
+              <div className="mt-3 overflow-hidden rounded-2xl border border-oxblood bg-iron text-chalk">
+                <div className="va-led-rule w-full" />
+                <div className="p-5">
+                  <span className="inline-block rounded-full bg-crimson px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-chalk">
+                    Limited Festival Drop
+                  </span>
+                  <h3 className="font-display mt-3 text-3xl font-extrabold uppercase leading-none">
+                    {campName || 'Festival Iron Offer'}
+                  </h3>
+                  <p className="mt-2 text-xs text-silver">
+                    Use code <strong className="font-mono text-amber-400">{campCode || 'PROMO'}</strong>{' '}
+                    at bKash/Nagad checkout for{' '}
+                    <strong>
+                      {campDiscountValue || '0'}
+                      {campDiscountType === CampaignDiscountType.PERCENTAGE ? '% OFF' : ' BDT OFF'}
+                    </strong>
+                    .
+                  </p>
+                  <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-crimson px-3.5 py-2 text-xs font-bold uppercase">
+                    Claim Offer <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -544,7 +583,7 @@ export default function AdminPage() {
         </section>
 
         {/* Proactive Churn Radar */}
-        <section className={`rounded-2xl border p-5 ${cardSurface}`}>
+        <section id="churn" className={`rounded-2xl border p-5 ${cardSurface}`}>
           <div className="mb-4 flex items-center justify-between border-b border-current/10 pb-3">
             <div>
               <h2 className="font-display text-2xl font-bold uppercase">
@@ -583,7 +622,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => void handleSendNudge(item)}
-                    className="mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-oxblood px-3 text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson"
+                    className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-oxblood px-3 text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson"
                   >
                     <Send className="h-4 w-4" />
                     Send AI Check-in Nudge
@@ -595,12 +634,12 @@ export default function AdminPage() {
         </section>
 
         {/* Equipment Maintenance Kanban + Print QR Sticker */}
-        <section className={`space-y-4 rounded-2xl border p-5 ${cardSurface}`}>
+        <section id="maintenance" className={`space-y-4 rounded-2xl border p-5 ${cardSurface}`}>
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-current/10 pb-3">
             <div className="flex items-center gap-2.5">
-              <Wrench className="h-5 w-5 text-amber-500" />
+              <Wrench className="h-5 w-5 text-amber-500" strokeWidth={1.75} />
               <h2 className="font-display text-2xl font-bold uppercase">
-                Equipment Maintenance Kanban & Asset QR Stickers
+                Equipment Maintenance Kanban &amp; Asset QR Stickers
               </h2>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -609,13 +648,13 @@ export default function AdminPage() {
                   key={eq.id}
                   type="button"
                   onClick={() => setQrModalAsset(eq)}
-                  className={`flex min-h-[44px] items-center gap-2 rounded-xl border px-3 text-xs font-bold ${
+                  className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 text-xs font-bold ${
                     lightMode
                       ? 'border-zinc-200 bg-zinc-50 text-zinc-800 hover:border-crimson'
                       : 'border-steel bg-obsidian text-silver hover:border-crimson'
                   }`}
                 >
-                  <QrCode className="h-4 w-4 text-crimson" />
+                  <QrCode className="h-4 w-4 text-crimson" strokeWidth={1.75} />
                   Print QR: {eq.name}
                   <EquipmentStatusBadge status={eq.status} />
                 </button>
@@ -629,13 +668,11 @@ export default function AdminPage() {
               return (
                 <div
                   key={col.status}
-                  className={`rounded-xl border-t-4 border p-4 ${col.accent} ${
-                    lightMode ? 'border-zinc-200 bg-zinc-50' : 'border-steel bg-obsidian/70'
-                  }`}
+                  className={`border-t-2 pt-3 ${col.accent}`}
                 >
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="font-display text-lg font-bold uppercase">{col.label}</h3>
-                    <span className="rounded-full bg-steel/40 px-2.5 py-0.5 text-xs font-bold">
+                    <span className="rounded-full bg-steel/40 px-2.5 py-0.5 text-xs font-bold tabular-nums">
                       {colTickets.length}
                     </span>
                   </div>
@@ -646,8 +683,8 @@ export default function AdminPage() {
                       colTickets.map((t) => (
                         <div
                           key={t.id}
-                          className={`rounded-xl border p-3 text-xs ${
-                            lightMode ? 'border-zinc-200 bg-white' : 'border-steel bg-iron'
+                          className={`rounded-xl border p-3.5 text-xs ${
+                            lightMode ? 'border-zinc-200 bg-zinc-50' : 'border-steel bg-obsidian'
                           }`}
                         >
                           <p className="font-bold">{t.equipmentName ?? t.equipmentId}</p>
@@ -668,7 +705,7 @@ export default function AdminPage() {
                                 onClick={() => void handleMoveTicket(t, TicketStatus.RESOLVED)}
                                 className="min-h-[36px] rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold text-emerald-500 hover:bg-emerald-500/30"
                               >
-                                Resolve & Operational
+                                Resolve &amp; Operational
                               </button>
                             ) : null}
                           </div>
@@ -683,7 +720,7 @@ export default function AdminPage() {
         </section>
 
         {/* Feature Flags & Immutable Audit Log */}
-        <section className="grid gap-5 lg:grid-cols-12">
+        <section id="security" className="grid gap-5 lg:grid-cols-12">
           {/* Feature Flags */}
           <div className={`rounded-2xl border p-5 lg:col-span-5 ${cardSurface}`}>
             <div className="mb-4 flex items-center gap-2.5 border-b border-current/10 pb-3">
@@ -793,7 +830,7 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
             >
               <Printer className="h-4 w-4" />
               Print Asset QR Sticker

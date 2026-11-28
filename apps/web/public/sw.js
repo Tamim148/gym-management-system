@@ -3,8 +3,8 @@
  * Cache only static shell assets for offline resilience.
  */
 
-const CACHE_NAME = 'va-gym-static-v1';
-const STATIC_ASSETS = ['/manifest.json', '/images/logo.png'];
+const CACHE_NAME = 'va-gym-static-v2';
+const STATIC_ASSETS = ['/manifest.json', '/images/logo.jpg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

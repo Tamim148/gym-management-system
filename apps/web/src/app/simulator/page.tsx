@@ -23,9 +23,9 @@ import {
   WifiOff,
   Wrench,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { BrandCrest } from '@/components/ui/BrandCrest';
 import {
   QueuedOfflineEvent,
   enqueueOfflineEvent,
@@ -64,6 +64,8 @@ interface EquipmentLookup {
   zoneName: string;
   status: string;
 }
+
+type SimulatorConsoleTab = 'TURNSTILE' | 'LOCKERS' | 'QR_SCANNER';
 
 const FALLBACK_BRANCHES: BranchItem[] = [
   {
@@ -148,6 +150,7 @@ export default function HardwareSimulatorPage() {
   const [selectedBranchId, setSelectedBranchId] = useState<string>(
     FALLBACK_BRANCHES[0].id,
   );
+  const [consoleTab, setConsoleTab] = useState<SimulatorConsoleTab>('TURNSTILE');
   const [offlineMode, setOfflineMode] = useState(false);
   const [queuedEvents, setQueuedEvents] = useState<QueuedOfflineEvent[]>([]);
   const [syncBanner, setSyncBanner] = useState<string | null>(null);
@@ -646,7 +649,7 @@ export default function HardwareSimulatorPage() {
     branches.find((b) => b.id === selectedBranchId) ?? branches[0];
 
   return (
-    <main className="min-h-screen bg-obsidian text-chalk">
+    <main className="min-h-screen bg-obsidian pb-24 text-chalk md:pb-12">
       {/* Persistent Offline Mode Banner */}
       {offlineMode && (
         <div
@@ -656,7 +659,7 @@ export default function HardwareSimulatorPage() {
         >
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 text-sm font-semibold">
             <div className="flex items-center gap-2">
-              <WifiOff className="h-4 w-4 shrink-0" />
+              <WifiOff className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               <span>
                 Offline Mode — Local Queue Active ({activeBranch?.code}):{' '}
                 {queuedEvents.length} event(s) buffered in IndexedDB
@@ -669,76 +672,121 @@ export default function HardwareSimulatorPage() {
         </div>
       )}
 
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 md:px-8">
-        {/* Header Bar */}
-        <header className="va-card va-hero-gradient flex flex-col justify-between gap-5 rounded-2xl p-6 lg:flex-row lg:items-center">
-          <div className="flex items-center gap-4">
-            <Image
-              src="/images/logo.png"
-              alt="Vintage Aesthetics Gym"
-              width={60}
-              height={60}
-              className="rounded-full border border-steel bg-obsidian p-1"
-            />
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-chrome">
-                <Cpu className="h-3.5 w-3.5 text-crimson" />
-                <span>Virtual Hardware &amp; Edge Simulator</span>
+      <div className="mx-auto max-w-7xl space-y-5 px-4 py-6 md:px-8">
+        {/* Unified Branch & Outage Header Bar */}
+        <header className="overflow-hidden rounded-2xl border border-steel bg-iron">
+          <div className="va-led-rule w-full" />
+          <div className="flex flex-col justify-between gap-5 p-5 lg:flex-row lg:items-center">
+            <div className="flex items-center gap-4">
+              <Link href="/" aria-label="Back to Storefront">
+                <BrandCrest size={52} />
+              </Link>
+              <div>
+                <div className="flex items-center gap-2 text-xs font-semibold text-chrome">
+                  <Cpu className="h-3.5 w-3.5 text-crimson" strokeWidth={1.75} />
+                  <span>Virtual Hardware &amp; Edge Simulator</span>
+                </div>
+                <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight text-chalk md:text-4xl">
+                  Turnstile, Lockers &amp; QR Console
+                </h1>
               </div>
-              <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight text-chalk md:text-4xl">
-                Turnstile, Lockers &amp; QR Console
-              </h1>
+            </div>
+
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="flex flex-col gap-1 text-xs text-chrome">
+                <span className="font-semibold">Active Branch</span>
+                <select
+                  aria-label="Branch selector"
+                  value={selectedBranchId}
+                  onChange={(e) => setSelectedBranchId(e.target.value)}
+                  className="min-h-11 rounded-xl border border-steel bg-obsidian px-3 text-sm font-semibold text-chalk focus:border-crimson focus:outline-none"
+                >
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.code} — {b.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => void toggleOfflineOutage()}
+                data-testid="toggle-offline-btn"
+                className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold uppercase tracking-wider transition ${
+                  offlineMode
+                    ? 'border-access-warn bg-access-warn/20 text-access-warn hover:bg-access-warn/30'
+                    : 'border-access-ok/50 bg-access-ok/15 text-access-ok hover:bg-access-ok/25'
+                }`}
+              >
+                {offlineMode ? (
+                  <>
+                    <WifiOff className="h-4 w-4" strokeWidth={1.75} />
+                    Restore Internet ({queuedEvents.length} queued)
+                  </>
+                ) : (
+                  <>
+                    <Wifi className="h-4 w-4" strokeWidth={1.75} />
+                    Simulate Internet Outage
+                  </>
+                )}
+              </button>
+
+              <Link
+                href="/dev-inbox"
+                className="inline-flex min-h-11 items-center rounded-xl border border-steel bg-obsidian px-4 py-2 text-xs font-semibold uppercase tracking-wider text-silver transition hover:border-crimson hover:text-chalk"
+              >
+                Dev Inbox
+              </Link>
             </div>
           </div>
+        </header>
 
+        {/* Persistent Compact Gate Telemetry Strip */}
+        <section
+          aria-label="Live Gate Telemetry"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-steel bg-iron px-4 py-3 text-xs"
+        >
           <div className="flex flex-wrap items-center gap-3">
-            <label className="flex flex-col gap-1 text-xs text-chrome">
-              <span className="uppercase tracking-wider">Active Branch</span>
-              <select
-                aria-label="Branch selector"
-                value={selectedBranchId}
-                onChange={(e) => setSelectedBranchId(e.target.value)}
-                className="min-h-[44px] rounded-xl border border-steel bg-obsidian px-3 text-sm font-semibold text-chalk focus:border-crimson focus:outline-none"
-              >
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.code} — {b.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
-              type="button"
-              onClick={() => void toggleOfflineOutage()}
-              data-testid="toggle-offline-btn"
-              className={`mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold uppercase tracking-wider transition ${
-                offlineMode
-                  ? 'border-access-warn bg-access-warn/20 text-access-warn hover:bg-access-warn/30'
-                  : 'border-access-ok/50 bg-access-ok/15 text-access-ok hover:bg-access-ok/25'
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-bold uppercase ${
+                gateState === 'UNLOCKED'
+                  ? 'border-access-ok/50 bg-access-ok/15 text-access-ok'
+                  : gateState === 'DENIED'
+                    ? 'border-access-denied/60 bg-access-denied/15 text-access-denied'
+                    : gateState === 'OFFLINE_QUEUED'
+                      ? 'border-access-warn/50 bg-access-warn/15 text-access-warn'
+                      : 'border-steel bg-obsidian text-chrome'
               }`}
             >
-              {offlineMode ? (
-                <>
-                  <WifiOff className="h-4 w-4" />
-                  Restore Branch Internet ({queuedEvents.length} queued)
-                </>
+              {gateState === 'UNLOCKED' ? (
+                <LockOpen className="h-3.5 w-3.5" strokeWidth={1.75} />
+              ) : gateState === 'DENIED' ? (
+                <Lock className="h-3.5 w-3.5" strokeWidth={1.75} />
+              ) : gateState === 'OFFLINE_QUEUED' ? (
+                <WifiOff className="h-3.5 w-3.5" strokeWidth={1.75} />
               ) : (
-                <>
-                  <Wifi className="h-4 w-4" />
-                  Simulate Branch Internet Outage
-                </>
+                <ShieldAlert className="h-3.5 w-3.5" strokeWidth={1.75} />
               )}
-            </button>
+              Gate: {gateState}
+            </span>
 
-            <Link
-              href="/dev-inbox"
-              className="mt-4 inline-flex min-h-[44px] items-center rounded-xl border border-steel bg-iron px-4 py-2 text-xs font-semibold uppercase tracking-wider text-silver transition hover:border-crimson hover:text-chalk"
-            >
-              Dev Inbox
-            </Link>
+            <span className="whitespace-nowrap rounded-lg border border-steel bg-obsidian px-2.5 py-1 font-mono text-silver">
+              UID: <strong className="text-chalk">{activeCardUid}</strong>
+            </span>
           </div>
-        </header>
+
+          <div className="flex items-center gap-3 text-chrome tabular-nums">
+            <span className="truncate max-w-[260px] sm:max-w-md">
+              {lastResult ? lastResult.reason : 'Ready for RFID tap or QR scan'}
+            </span>
+            {lastResult ? (
+              <span className="font-mono font-semibold text-silver">
+                {lastResult.latencyMs}ms
+              </span>
+            ) : null}
+          </div>
+        </section>
 
         {syncBanner && (
           <div className="flex items-center justify-between gap-3 rounded-xl border border-steel bg-iron px-4 py-3 text-sm text-silver">
@@ -749,311 +797,353 @@ export default function HardwareSimulatorPage() {
                 onClick={() => void reconcileOfflineQueue(selectedBranchId)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-crimson px-3 py-1.5 text-xs font-bold uppercase text-chalk"
               >
-                <RefreshCw className="h-3.5 w-3.5" />
+                <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.75} />
                 Retry Sync
               </button>
             )}
           </div>
         )}
 
-        {/* Main Grid: Turnstile Gate + Seeded Card Taps */}
-        <div className="grid gap-6 lg:grid-cols-12">
-          {/* Left: Seeded RFID Tap Pad */}
-          <section className="va-card space-y-5 rounded-2xl p-6 lg:col-span-7">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display flex items-center gap-2 text-2xl font-bold uppercase text-chalk">
-                <Radio className="h-5 w-5 text-crimson" />
-                RFID Turnstile Reader
-              </h2>
-              <span className="rounded-full border border-steel bg-obsidian px-3 py-1 text-xs text-chrome">
-                Selected UID: <strong className="text-chalk">{activeCardUid}</strong>
-              </span>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              {SEEDED_CARDS.map((card) => {
-                const badgeTone =
-                  card.tone === 'ok'
-                    ? 'text-access-ok border-access-ok/30 bg-access-ok/10'
-                    : card.tone === 'warn'
-                      ? 'text-access-warn border-access-warn/30 bg-access-warn/10'
-                      : 'text-access-denied border-access-denied/30 bg-access-denied/10';
-                return (
-                  <button
-                    key={card.uid}
-                    type="button"
-                    disabled={isTapping}
-                    onClick={() => void handleCardTap(card.uid)}
-                    className="flex min-h-[72px] flex-col justify-between rounded-xl border border-steel bg-obsidian p-3.5 text-left transition hover:border-crimson disabled:opacity-60"
-                  >
-                    <div className="flex w-full items-center justify-between gap-2">
-                      <span className="font-mono text-xs font-bold text-chalk">
-                        {card.uid}
-                      </span>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeTone}`}
-                      >
-                        {card.tag}
-                      </span>
-                    </div>
-                    <span className="mt-1.5 text-sm font-medium text-silver">
-                      {card.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Custom Card UID Input */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void handleCardTap(customCardUid);
-              }}
-              className="flex flex-col gap-2 sm:flex-row"
-            >
-              <input
-                type="text"
-                value={customCardUid}
-                onChange={(e) => setCustomCardUid(e.target.value)}
-                placeholder="Enter custom Card UID (e.g., VA-RFID-2104)"
-                aria-label="Custom RFID Card UID"
-                className="min-h-[46px] flex-1 rounded-xl border border-steel bg-obsidian px-3.5 text-sm text-chalk placeholder:text-chrome/60 focus:border-crimson focus:outline-none"
-              />
+        {/* Segmented Console Tabs */}
+        <div
+          role="tablist"
+          aria-label="Hardware Console Modules"
+          className="grid grid-cols-3 gap-2 rounded-2xl border border-steel bg-iron p-1.5"
+        >
+          {(
+            [
+              { id: 'TURNSTILE', label: 'Turnstile & RFID', icon: Radio },
+              { id: 'LOCKERS', label: 'Smart Lockers', icon: KeyRound },
+              { id: 'QR_SCANNER', label: 'QR & Asset Reporter', icon: QrCode },
+            ] as const
+          ).map((tab) => {
+            const Icon = tab.icon;
+            const active = consoleTab === tab.id;
+            return (
               <button
-                type="submit"
-                disabled={isTapping || !customCardUid.trim()}
-                className="min-h-[46px] rounded-xl bg-crimson px-5 text-xs font-bold uppercase tracking-wider text-chalk transition hover:bg-crimson-hover disabled:opacity-50"
-              >
-                Tap Custom Card
-              </button>
-            </form>
-
-            {/* Offline Override Simulator */}
-            {offlineMode && (
-              <form
-                onSubmit={handleQueueOfflineOverride}
-                className="space-y-3 rounded-xl border border-access-warn/40 bg-access-warn/5 p-4"
-              >
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-access-warn">
-                  <AlertTriangle className="h-4 w-4" />
-                  Queue Offline Manual Override (Reconciles on Reconnect)
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <select
-                    value={overrideUserId}
-                    onChange={(e) => setOverrideUserId(e.target.value)}
-                    aria-label="Member for offline override"
-                    className="min-h-[42px] rounded-lg border border-steel bg-obsidian px-3 text-xs text-chalk"
-                  >
-                    <option value="30000000-0000-4000-8000-000000000008">
-                      Tariq Hasan (Overdue)
-                    </option>
-                    <option value="30000000-0000-4000-8000-000000000009">
-                      Kamrul Islam (Partial)
-                    </option>
-                    <option value="30000000-0000-4000-8000-000000000010">
-                      Nusrat Jahan (Frozen)
-                    </option>
-                  </select>
-                  <select
-                    value={overrideReason}
-                    onChange={(e) =>
-                      setOverrideReason(
-                        e.target.value as
-                          | 'Promised to pay tomorrow'
-                          | 'Card reader glitch'
-                          | 'Admin approved',
-                      )
-                    }
-                    aria-label="Override reason"
-                    className="min-h-[42px] rounded-lg border border-steel bg-obsidian px-3 text-xs text-chalk"
-                  >
-                    <option value="Promised to pay tomorrow">
-                      Promised to pay tomorrow
-                    </option>
-                    <option value="Card reader glitch">Card reader glitch</option>
-                    <option value="Admin approved">Admin approved</option>
-                  </select>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={overrideNotes}
-                    onChange={(e) => setOverrideNotes(e.target.value)}
-                    minLength={10}
-                    placeholder="Mandatory >= 10 char justification note"
-                    className="min-h-[42px] flex-1 rounded-lg border border-steel bg-obsidian px-3 text-xs text-chalk"
-                  />
-                  <button
-                    type="submit"
-                    className="min-h-[42px] rounded-lg border border-access-warn bg-access-warn/20 px-4 text-xs font-bold uppercase text-access-warn hover:bg-access-warn/30"
-                  >
-                    Queue Override
-                  </button>
-                </div>
-              </form>
-            )}
-          </section>
-
-          {/* Right: Animated Virtual Turnstile Gate */}
-          <section className="va-card flex flex-col justify-between rounded-2xl p-6 lg:col-span-5">
-            <div>
-              <h2 className="font-display text-2xl font-bold uppercase text-chalk">
-                Virtual Turnstile Gate ({activeBranch?.code})
-              </h2>
-              <p className="mt-1 text-xs text-chrome">
-                Real-time optical barrier &amp; fail-closed decision engine
-              </p>
-
-              {/* Animated Turnstile Graphic */}
-              <div
-                data-testid="virtual-turnstile-gate"
-                className={`mt-5 rounded-2xl border-2 p-6 text-center transition-all duration-300 ${
-                  gateState === 'UNLOCKED'
-                    ? 'border-access-ok bg-access-ok/10 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
-                    : gateState === 'DENIED'
-                      ? 'animate-pulse border-access-denied bg-access-denied/15 shadow-[0_0_30px_rgba(255,42,59,0.25)]'
-                      : gateState === 'OFFLINE_QUEUED'
-                        ? 'border-access-warn bg-access-warn/10'
-                        : 'border-steel bg-obsidian'
+                key={tab.id}
+                role="tab"
+                type="button"
+                aria-selected={active}
+                onClick={() => setConsoleTab(tab.id)}
+                className={`flex min-h-[46px] items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  active ? 'bg-crimson text-chalk' : 'text-chrome hover:text-chalk'
                 }`}
               >
-                <div className="mx-auto flex h-24 w-full max-w-[260px] items-center justify-between px-4">
-                  <div className="h-16 w-4 rounded bg-steel" />
-                  <div className="flex flex-1 items-center justify-center">
-                    {gateState === 'UNLOCKED' ? (
-                      <div className="flex flex-col items-center gap-1 text-access-ok">
-                        <LockOpen className="h-10 w-10" />
-                        <span className="font-display text-xl font-extrabold uppercase tracking-wider">
-                          Gate Unlocked
-                        </span>
-                      </div>
-                    ) : gateState === 'DENIED' ? (
-                      <div className="flex flex-col items-center gap-1 text-access-denied">
-                        <Lock className="h-10 w-10" />
-                        <span className="font-display text-xl font-extrabold uppercase tracking-wider">
-                          Access Denied
-                        </span>
-                      </div>
-                    ) : gateState === 'OFFLINE_QUEUED' ? (
-                      <div className="flex flex-col items-center gap-1 text-access-warn">
-                        <WifiOff className="h-10 w-10" />
-                        <span className="font-display text-xl font-extrabold uppercase tracking-wider">
-                          Buffered Local
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1 text-chrome">
-                        <ShieldAlert className="h-10 w-10" />
-                        <span className="font-display text-lg font-bold uppercase tracking-wider">
-                          Standby — Tap Card
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="h-16 w-4 rounded bg-steel" />
-                </div>
-
-                {/* Gate Barriers Animation */}
-                <div className="mx-auto mt-3 flex max-w-[220px] items-center justify-between gap-2">
-                  <div
-                    className={`h-2 flex-1 origin-left rounded-full transition-transform duration-300 ${
-                      gateState === 'UNLOCKED' || gateState === 'OFFLINE_QUEUED'
-                        ? '-rotate-45 bg-access-ok'
-                        : gateState === 'DENIED'
-                          ? 'rotate-0 bg-access-denied'
-                          : 'rotate-0 bg-steel'
-                    }`}
-                  />
-                  <div
-                    className={`h-2 flex-1 origin-right rounded-full transition-transform duration-300 ${
-                      gateState === 'UNLOCKED' || gateState === 'OFFLINE_QUEUED'
-                        ? 'rotate-45 bg-access-ok'
-                        : gateState === 'DENIED'
-                          ? 'rotate-0 bg-access-denied'
-                          : 'rotate-0 bg-steel'
-                    }`}
-                  />
-                </div>
-
-                {lastResult && (
-                  <div className="mt-5 space-y-1.5 border-t border-steel/60 pt-4 text-left text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold uppercase tracking-wider text-chalk">
-                        {lastResult.entryStatus}
-                      </span>
-                      <span className="font-mono text-chrome">
-                        {lastResult.latencyMs} ms
-                      </span>
-                    </div>
-                    {lastResult.memberName && (
-                      <p className="text-sm font-semibold text-chalk">
-                        {lastResult.memberName}{' '}
-                        {lastResult.planName ? `• ${lastResult.planName}` : ''}
-                      </p>
-                    )}
-                    <p className="text-silver">{lastResult.reason}</p>
-                    {typeof lastResult.dueAmountBdt === 'number' &&
-                      lastResult.dueAmountBdt > 0 && (
-                        <p className="font-bold text-access-denied">
-                          Outstanding Balance: {lastResult.dueAmountBdt} BDT
-                        </p>
-                      )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Recent Simulator Taps */}
-            <div className="mt-4 space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-chrome">
-                Recent Gate Telemetry
-              </p>
-              {tapHistory.length === 0 ? (
-                <p className="text-xs text-chrome/70">
-                  No taps simulated yet in this session.
-                </p>
-              ) : (
-                <ul className="space-y-1.5 text-xs">
-                  {tapHistory.slice(0, 4).map((item) => (
-                    <li
-                      key={`${item.id}-${item.time}`}
-                      className="flex items-center justify-between rounded-lg border border-steel/70 bg-obsidian px-3 py-1.5"
-                    >
-                      <span className="truncate font-mono text-silver">
-                        {item.label}
-                      </span>
-                      <span
-                        className={`font-semibold ${
-                          item.allowed ? 'text-access-ok' : 'text-access-denied'
-                        }`}
-                      >
-                        {item.status} ({item.latencyMs}ms)
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
+                <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                <span className="truncate">{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Bottom Grid: Smart Lockers + Webcam QR Scanner */}
-        <div className="grid gap-6 lg:grid-cols-12">
-          {/* Interactive Smart Locker Grid */}
-          <section className="va-card space-y-4 rounded-2xl p-6 lg:col-span-5">
-            <div className="flex items-center justify-between">
+        {/* CONSOLE TAB 1: TURNSTILE & RFID */}
+        {consoleTab === 'TURNSTILE' ? (
+          <div className="grid gap-6 lg:grid-cols-12">
+            {/* Left: Seeded RFID Tap Pad */}
+            <section className="va-card space-y-5 rounded-2xl p-6 lg:col-span-7">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-display flex items-center gap-2 text-2xl font-bold uppercase text-chalk">
+                  <Radio className="h-5 w-5 text-crimson" strokeWidth={1.75} />
+                  RFID Turnstile Reader
+                </h2>
+                <span className="whitespace-nowrap rounded-full border border-steel bg-obsidian px-3 py-1 text-xs text-chrome">
+                  Selected UID: <strong className="font-mono text-chalk">{activeCardUid}</strong>
+                </span>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {SEEDED_CARDS.map((card) => {
+                  const badgeTone =
+                    card.tone === 'ok'
+                      ? 'text-access-ok border-access-ok/30 bg-access-ok/10'
+                      : card.tone === 'warn'
+                        ? 'text-access-warn border-access-warn/30 bg-access-warn/10'
+                        : 'text-access-denied border-access-denied/30 bg-access-denied/10';
+                  return (
+                    <button
+                      key={card.uid}
+                      type="button"
+                      disabled={isTapping}
+                      onClick={() => void handleCardTap(card.uid)}
+                      className="flex min-h-[72px] flex-col justify-between rounded-xl border border-steel bg-obsidian p-3.5 text-left transition hover:border-crimson disabled:opacity-60"
+                    >
+                      <div className="flex w-full items-center justify-between gap-2">
+                        <span className="whitespace-nowrap font-mono text-xs font-bold text-chalk">
+                          {card.uid}
+                        </span>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeTone}`}
+                        >
+                          {card.tag}
+                        </span>
+                      </div>
+                      <span className="mt-1.5 text-sm font-medium text-silver">
+                        {card.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Custom Card UID Input */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void handleCardTap(customCardUid);
+                }}
+                className="flex flex-col gap-2 sm:flex-row"
+              >
+                <input
+                  type="text"
+                  value={customCardUid}
+                  onChange={(e) => setCustomCardUid(e.target.value)}
+                  placeholder="Enter custom Card UID (e.g., VA-RFID-2104)"
+                  aria-label="Custom RFID Card UID"
+                  className="min-h-[46px] flex-1 rounded-xl border border-steel bg-obsidian px-3.5 text-sm text-chalk placeholder:text-chrome/60 focus:border-crimson focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={isTapping || !customCardUid.trim()}
+                  className="min-h-[46px] rounded-xl bg-crimson px-5 text-xs font-bold uppercase tracking-wider text-chalk transition hover:bg-crimson-hover disabled:opacity-50"
+                >
+                  Tap Custom Card
+                </button>
+              </form>
+
+              {/* Offline Override Simulator */}
+              {offlineMode && (
+                <form
+                  onSubmit={handleQueueOfflineOverride}
+                  className="space-y-3 rounded-xl border border-access-warn/40 bg-access-warn/5 p-4"
+                >
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-access-warn">
+                    <AlertTriangle className="h-4 w-4" strokeWidth={1.75} />
+                    Queue Offline Manual Override (Reconciles on Reconnect)
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <select
+                      value={overrideUserId}
+                      onChange={(e) => setOverrideUserId(e.target.value)}
+                      aria-label="Member for offline override"
+                      className="min-h-[42px] rounded-lg border border-steel bg-obsidian px-3 text-xs text-chalk"
+                    >
+                      <option value="30000000-0000-4000-8000-000000000008">
+                        Tariq Hasan (Overdue)
+                      </option>
+                      <option value="30000000-0000-4000-8000-000000000009">
+                        Kamrul Islam (Partial)
+                      </option>
+                      <option value="30000000-0000-4000-8000-000000000010">
+                        Nusrat Jahan (Frozen)
+                      </option>
+                    </select>
+                    <select
+                      value={overrideReason}
+                      onChange={(e) =>
+                        setOverrideReason(
+                          e.target.value as
+                            | 'Promised to pay tomorrow'
+                            | 'Card reader glitch'
+                            | 'Admin approved',
+                        )
+                      }
+                      aria-label="Override reason"
+                      className="min-h-[42px] rounded-lg border border-steel bg-obsidian px-3 text-xs text-chalk"
+                    >
+                      <option value="Promised to pay tomorrow">
+                        Promised to pay tomorrow
+                      </option>
+                      <option value="Card reader glitch">Card reader glitch</option>
+                      <option value="Admin approved">Admin approved</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={overrideNotes}
+                      onChange={(e) => setOverrideNotes(e.target.value)}
+                      minLength={10}
+                      placeholder="Mandatory >= 10 char justification note"
+                      className="min-h-[42px] flex-1 rounded-lg border border-steel bg-obsidian px-3 text-xs text-chalk"
+                    />
+                    <button
+                      type="submit"
+                      className="min-h-[42px] rounded-lg border border-access-warn bg-access-warn/20 px-4 text-xs font-bold uppercase text-access-warn hover:bg-access-warn/30"
+                    >
+                      Queue Override
+                    </button>
+                  </div>
+                </form>
+              )}
+            </section>
+
+            {/* Right: Animated Virtual Turnstile Gate */}
+            <section className="va-card flex flex-col justify-between rounded-2xl p-6 lg:col-span-5">
+              <div>
+                <h2 className="font-display text-2xl font-bold uppercase text-chalk">
+                  Virtual Turnstile Gate ({activeBranch?.code})
+                </h2>
+                <p className="mt-1 text-xs text-chrome">
+                  Real-time optical barrier &amp; fail-closed decision engine
+                </p>
+
+                <div
+                  data-testid="virtual-turnstile-gate"
+                  className={`mt-5 rounded-2xl border-2 p-6 text-center transition-colors duration-200 ${
+                    gateState === 'UNLOCKED'
+                      ? 'border-access-ok bg-access-ok/10'
+                      : gateState === 'DENIED'
+                        ? 'border-access-denied bg-access-denied/10'
+                        : gateState === 'OFFLINE_QUEUED'
+                          ? 'border-access-warn bg-access-warn/10'
+                          : 'border-steel bg-obsidian'
+                  }`}
+                >
+                  <div className="mx-auto flex h-24 w-full max-w-[260px] items-center justify-between px-4">
+                    <div className="h-16 w-4 rounded bg-steel" />
+                    <div className="flex flex-1 items-center justify-center">
+                      {gateState === 'UNLOCKED' ? (
+                        <div className="flex flex-col items-center gap-1 text-access-ok">
+                          <LockOpen className="h-10 w-10" strokeWidth={1.75} />
+                          <span className="font-display text-xl font-extrabold uppercase tracking-wider">
+                            Gate Unlocked
+                          </span>
+                        </div>
+                      ) : gateState === 'DENIED' ? (
+                        <div className="flex flex-col items-center gap-1 text-access-denied">
+                          <div className="relative">
+                            <Lock className="h-10 w-10" strokeWidth={1.75} />
+                            <span
+                              aria-hidden="true"
+                              className="absolute -top-1 -right-1 flex h-3 w-3"
+                            >
+                              <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-access-denied opacity-75" />
+                              <span className="relative inline-flex h-3 w-3 rounded-full bg-access-denied" />
+                            </span>
+                          </div>
+                          <span className="font-display text-xl font-extrabold uppercase tracking-wider">
+                            Access Denied
+                          </span>
+                        </div>
+                      ) : gateState === 'OFFLINE_QUEUED' ? (
+                        <div className="flex flex-col items-center gap-1 text-access-warn">
+                          <WifiOff className="h-10 w-10" strokeWidth={1.75} />
+                          <span className="font-display text-xl font-extrabold uppercase tracking-wider">
+                            Buffered Local
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-chrome">
+                          <ShieldAlert className="h-10 w-10" strokeWidth={1.75} />
+                          <span className="font-display text-lg font-bold uppercase tracking-wider">
+                            Standby — Tap Card
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="h-16 w-4 rounded bg-steel" />
+                  </div>
+
+                  {/* Gate Barriers Animation */}
+                  <div className="mx-auto mt-3 flex max-w-[220px] items-center justify-between gap-2">
+                    <div
+                      className={`h-2 flex-1 origin-left rounded-full transition-transform duration-300 ${
+                        gateState === 'UNLOCKED' || gateState === 'OFFLINE_QUEUED'
+                          ? '-rotate-45 bg-access-ok'
+                          : gateState === 'DENIED'
+                            ? 'rotate-0 bg-access-denied'
+                            : 'rotate-0 bg-steel'
+                      }`}
+                    />
+                    <div
+                      className={`h-2 flex-1 origin-right rounded-full transition-transform duration-300 ${
+                        gateState === 'UNLOCKED' || gateState === 'OFFLINE_QUEUED'
+                          ? 'rotate-45 bg-access-ok'
+                          : gateState === 'DENIED'
+                            ? 'rotate-0 bg-access-denied'
+                            : 'rotate-0 bg-steel'
+                      }`}
+                    />
+                  </div>
+
+                  {lastResult && (
+                    <div className="mt-5 space-y-1.5 border-t border-steel pt-4 text-left text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold uppercase tracking-wider text-chalk">
+                          {lastResult.entryStatus}
+                        </span>
+                        <span className="font-mono text-chrome tabular-nums">
+                          {lastResult.latencyMs} ms
+                        </span>
+                      </div>
+                      {lastResult.memberName && (
+                        <p className="text-sm font-semibold text-chalk">
+                          {lastResult.memberName}{' '}
+                          {lastResult.planName ? `· ${lastResult.planName}` : ''}
+                        </p>
+                      )}
+                      <p className="text-silver">{lastResult.reason}</p>
+                      {typeof lastResult.dueAmountBdt === 'number' &&
+                        lastResult.dueAmountBdt > 0 && (
+                          <p className="font-bold text-access-denied tabular-nums">
+                            Outstanding Balance: {lastResult.dueAmountBdt} BDT
+                          </p>
+                        )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Recent Simulator Taps */}
+              <div className="mt-4 space-y-2">
+                <p className="text-xs font-semibold text-chrome">
+                  Recent Gate Telemetry
+                </p>
+                {tapHistory.length === 0 ? (
+                  <p className="text-xs text-chrome/70">
+                    No taps simulated yet in this session.
+                  </p>
+                ) : (
+                  <ul className="space-y-1.5 text-xs">
+                    {tapHistory.slice(0, 4).map((item) => (
+                      <li
+                        key={`${item.id}-${item.time}`}
+                        className="flex items-center justify-between rounded-lg border border-steel bg-obsidian px-3 py-1.5"
+                      >
+                        <span className="truncate font-mono text-silver">
+                          {item.label}
+                        </span>
+                        <span
+                          className={`font-semibold tabular-nums ${
+                            item.allowed ? 'text-access-ok' : 'text-access-denied'
+                          }`}
+                        >
+                          {item.status} ({item.latencyMs}ms)
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
+          </div>
+        ) : null}
+
+        {/* CONSOLE TAB 2: SMART LOCKERS */}
+        {consoleTab === 'LOCKERS' ? (
+          <section className="va-card space-y-4 rounded-2xl p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-display flex items-center gap-2 text-2xl font-bold uppercase text-chalk">
-                <KeyRound className="h-5 w-5 text-crimson" />
-                Smart Locker Grid
+                <KeyRound className="h-5 w-5 text-crimson" strokeWidth={1.75} />
+                Smart Locker Grid ({activeBranch?.code})
               </h2>
-              <span className="text-xs text-chrome">
-                Tap with: <strong className="text-chalk">{activeCardUid}</strong>
+              <span className="whitespace-nowrap rounded-full border border-steel bg-obsidian px-3 py-1 text-xs text-chrome">
+                Tap with: <strong className="font-mono text-chalk">{activeCardUid}</strong>
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
               {lockers.map((locker) => {
                 const occupied = Boolean(locker.assignedUserId);
                 return (
@@ -1061,7 +1151,7 @@ export default function HardwareSimulatorPage() {
                     key={locker.id}
                     type="button"
                     onClick={() => void handleLockerTap(locker)}
-                    className={`flex min-h-[88px] flex-col justify-between rounded-xl border p-3 text-left transition ${
+                    className={`flex min-h-[92px] flex-col justify-between rounded-xl border p-3 text-left transition ${
                       occupied
                         ? 'border-oxblood bg-oxblood/20 hover:border-crimson'
                         : 'border-steel bg-obsidian hover:border-access-ok'
@@ -1082,7 +1172,7 @@ export default function HardwareSimulatorPage() {
                         {locker.hardwareRelayId}
                       </p>
                       <p className="mt-0.5 text-xs font-semibold text-silver">
-                        {occupied ? 'Claimed (Tap Release)' : 'Available'}
+                        {occupied ? 'Claimed (Release)' : 'Available'}
                       </p>
                     </div>
                   </button>
@@ -1096,12 +1186,14 @@ export default function HardwareSimulatorPage() {
               </p>
             )}
           </section>
+        ) : null}
 
-          {/* Webcam QR Scanner & Broken Equipment Reporter */}
-          <section className="va-card space-y-4 rounded-2xl p-6 lg:col-span-7">
+        {/* CONSOLE TAB 3: QR SCANNER & ASSET REPORTER */}
+        {consoleTab === 'QR_SCANNER' ? (
+          <section className="va-card space-y-4 rounded-2xl p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-display flex items-center gap-2 text-2xl font-bold uppercase text-chalk">
-                <QrCode className="h-5 w-5 text-crimson" />
+                <QrCode className="h-5 w-5 text-crimson" strokeWidth={1.75} />
                 Webcam QR Scanner &amp; Asset Reporter
               </h2>
               <div className="inline-flex rounded-xl border border-steel bg-obsidian p-1 text-xs">
@@ -1139,13 +1231,13 @@ export default function HardwareSimulatorPage() {
               >
                 {cameraActive ? (
                   <>
-                    <CameraOff className="h-4 w-4 text-crimson" />
+                    <CameraOff className="h-4 w-4 text-crimson" strokeWidth={1.75} />
                     Stop Webcam
                   </>
                 ) : (
                   <>
-                    <Camera className="h-4 w-4 text-access-ok" />
-                    Start Webcam Scanner (html5-qrcode)
+                    <Camera className="h-4 w-4 text-access-ok" strokeWidth={1.75} />
+                    Start Webcam Scanner
                   </>
                 )}
               </button>
@@ -1158,7 +1250,7 @@ export default function HardwareSimulatorPage() {
                 }}
                 className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border border-oxblood bg-oxblood/25 px-3 text-xs font-semibold text-chalk transition hover:bg-oxblood/45"
               >
-                <Wrench className="h-3.5 w-3.5" />
+                <Wrench className="h-3.5 w-3.5" strokeWidth={1.75} />
                 Quick Test: VA-EQ-DHK01-TM04
               </button>
 
@@ -1205,11 +1297,11 @@ export default function HardwareSimulatorPage() {
                     : 'Enter Equipment QR Token (e.g., VA-EQ-DHK01-TM04)'
                 }
                 aria-label="Manual QR Token Input"
-                className="min-h-[44px] flex-1 rounded-xl border border-steel bg-obsidian px-3.5 text-sm text-chalk focus:border-crimson focus:outline-none"
+                className="min-h-11 flex-1 rounded-xl border border-steel bg-obsidian px-3.5 text-sm text-chalk focus:border-crimson focus:outline-none"
               />
               <button
                 type="submit"
-                className="min-h-[44px] rounded-xl bg-crimson px-5 text-xs font-bold uppercase tracking-wider text-chalk transition hover:bg-crimson-hover"
+                className="min-h-11 rounded-xl bg-crimson px-5 text-xs font-bold uppercase tracking-wider text-chalk transition hover:bg-crimson-hover"
               >
                 {qrMode === 'MEMBER_PASS' ? 'Verify QR Pass' : 'Lookup Asset'}
               </button>
@@ -1219,7 +1311,7 @@ export default function HardwareSimulatorPage() {
             {qrMode === 'EQUIPMENT_REPORT' && (
               <form
                 onSubmit={handleTicketSubmit}
-                className="space-y-3 rounded-xl border border-steel bg-obsidian/80 p-4"
+                className="space-y-3 rounded-xl border border-steel bg-obsidian p-4"
               >
                 {equipmentAsset ? (
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-steel pb-3">
@@ -1228,7 +1320,7 @@ export default function HardwareSimulatorPage() {
                         {equipmentAsset.name}
                       </p>
                       <p className="text-xs text-chrome">
-                        Zone: {equipmentAsset.zoneName} • Token:{' '}
+                        Zone: {equipmentAsset.zoneName} · Token:{' '}
                         {equipmentAsset.qrCodeToken}
                       </p>
                     </div>
@@ -1261,7 +1353,7 @@ export default function HardwareSimulatorPage() {
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-steel bg-iron px-3 py-2 text-xs text-silver hover:border-crimson">
-                    <Upload className="h-3.5 w-3.5" />
+                    <Upload className="h-3.5 w-3.5" strokeWidth={1.75} />
                     <span>
                       {ticketPhoto ? ticketPhoto.name : 'Attach Photo (JPG/PNG/WebP)'}
                     </span>
@@ -1279,7 +1371,7 @@ export default function HardwareSimulatorPage() {
                     type="submit"
                     className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-crimson px-4 text-xs font-bold uppercase tracking-wider text-chalk transition hover:bg-crimson-hover"
                   >
-                    <Wrench className="h-3.5 w-3.5" />
+                    <Wrench className="h-3.5 w-3.5" strokeWidth={1.75} />
                     Report Broken Equipment
                   </button>
                 </div>
@@ -1288,12 +1380,12 @@ export default function HardwareSimulatorPage() {
 
             {ticketNotice && (
               <div className="flex items-center gap-2 rounded-xl border border-steel bg-obsidian px-3.5 py-2.5 text-xs text-silver">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-access-ok" />
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-access-ok" strokeWidth={1.75} />
                 <span>{ticketNotice}</span>
               </div>
             )}
           </section>
-        </div>
+        ) : null}
       </div>
     </main>
   );

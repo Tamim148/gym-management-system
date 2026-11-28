@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -11,6 +10,7 @@ import {
   ClipboardCheck,
   Clock,
   DollarSign,
+  Dumbbell,
   Edit3,
   List,
   LogOut,
@@ -32,6 +32,7 @@ import {
 import { ApiError, apiDelete, apiGet, apiPatch, apiPost } from '@/lib/api';
 import { fetchMe, formatBdt, logoutAndWipe } from '@/lib/dal';
 import type { BranchItem, EquipmentAssetItem, TrainerSessionItem } from '@/lib/types';
+import { BrandCrest } from '@/components/ui/BrandCrest';
 import { Modal } from '@/components/ui/Modal';
 import { SkeletonBlock } from '@/components/ui/Skeleton';
 import { ToastBanner, type ToastState } from '@/components/ui/ToastBanner';
@@ -44,7 +45,7 @@ function sessionTypeAccent(type: SessionType): string {
     case SessionType.PERSONAL_TRAINING:
       return 'border-l-4 border-l-crimson bg-oxblood/20';
     case SessionType.GROUP_CLASS:
-      return 'border-l-4 border-l-indigo-400 bg-indigo-950/20';
+      return 'border-l-4 border-l-amber-500 bg-amber-500/10';
     case SessionType.OPEN_AVAILABILITY:
     default:
       return 'border-l-4 border-l-chrome bg-iron';
@@ -335,23 +336,17 @@ export default function TrainerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-obsidian pb-12 text-chalk">
+    <div className="min-h-screen bg-obsidian pb-24 text-chalk md:pb-12">
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-steel bg-iron/95 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-20 border-b border-steel bg-iron px-4 py-3">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/images/logo.png"
-              alt="Vintage Aesthetics Coach Portal"
-              width={42}
-              height={42}
-              className="rounded-full border border-chrome/40 bg-obsidian p-0.5"
-            />
+            <BrandCrest size={42} alt="Vintage Aesthetics Coach Portal" />
             <div>
               <h1 className="font-display text-2xl font-extrabold uppercase leading-none">
                 Trainer Portal
               </h1>
-              <p className="text-xs text-chrome">{user.fullName} • {user.branchName ?? 'Coach'}</p>
+              <p className="text-xs text-chrome">{user.fullName} · {user.branchName ?? 'Coach'}</p>
             </div>
           </Link>
 
@@ -359,18 +354,18 @@ export default function TrainerPage() {
             <button
               type="button"
               onClick={openCreateModal}
-              className="flex min-h-[48px] items-center gap-2 rounded-xl bg-crimson px-4 text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
+              className="flex min-h-11 items-center gap-2 rounded-xl bg-crimson px-4 text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4" strokeWidth={1.75} />
               New Slot
             </button>
             <button
               type="button"
               onClick={() => void handleLogout()}
               aria-label="Logout"
-              className="flex h-12 w-12 items-center justify-center rounded-xl border border-steel bg-obsidian text-chrome hover:border-crimson hover:text-chalk"
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-steel bg-obsidian text-chrome hover:border-crimson hover:text-chalk"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-4 w-4" strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -383,7 +378,7 @@ export default function TrainerPage() {
             role="alert"
             className="flex items-start gap-3 rounded-2xl border-2 border-[#FF2A3B] bg-[#FF2A3B]/15 p-4 text-sm text-chalk"
           >
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[#FF2A3B]" />
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[#FF2A3B]" strokeWidth={1.75} />
             <div>
               <p className="font-display text-lg font-extrabold uppercase text-[#FF2A3B]">
                 Equipment Out of Order Alert
@@ -391,7 +386,7 @@ export default function TrainerPage() {
               <p className="text-xs text-silver">
                 {brokenEquipment
                   .map((eq) => `${eq.name} (${eq.zoneName})`)
-                  .join(' • ')}{' '}
+                  .join(' · ')}{' '}
                 — Adjust class programming accordingly.
               </p>
             </div>
@@ -414,11 +409,11 @@ export default function TrainerPage() {
                 key={t.id}
                 type="button"
                 onClick={() => setActiveTab(t.id)}
-                className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold uppercase tracking-wider transition-colors ${
                   active ? 'bg-crimson text-chalk' : 'text-chrome hover:text-chalk'
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4" strokeWidth={1.75} />
                 <span className="truncate">{t.label}</span>
               </button>
             );
@@ -435,23 +430,30 @@ export default function TrainerPage() {
                     key={mode}
                     type="button"
                     onClick={() => setCalendarMode(mode)}
-                    className={`min-h-[44px] rounded-xl border px-3.5 text-xs font-bold uppercase ${
+                    className={`min-h-[42px] rounded-xl border px-3.5 text-xs font-bold uppercase ${
                       calendarMode === mode
                         ? 'border-crimson bg-oxblood/50 text-chalk'
                         : 'border-steel bg-iron text-chrome'
                     }`}
                   >
-                    <List className="mr-1 inline h-3.5 w-3.5" />
+                    <List className="mr-1 inline h-3.5 w-3.5" strokeWidth={1.75} />
                     {mode}
                   </button>
                 ))}
               </div>
               <div className="flex flex-wrap gap-2 text-[11px] font-bold">
-                <span className="rounded bg-crimson/20 px-2 py-1 text-crimson">■ 1-on-1 PT</span>
-                <span className="rounded bg-indigo-500/20 px-2 py-1 text-indigo-300">
-                  ■ Group Class
+                <span className="inline-flex items-center gap-1.5 rounded bg-crimson/20 px-2.5 py-1 text-crimson">
+                  <Dumbbell className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  1-on-1 PT
                 </span>
-                <span className="rounded bg-steel px-2 py-1 text-silver">■ Open Slot</span>
+                <span className="inline-flex items-center gap-1.5 rounded bg-amber-500/20 px-2.5 py-1 text-amber-400">
+                  <Users className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  Group Class
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded bg-steel px-2.5 py-1 text-silver">
+                  <Clock className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  Open Slot
+                </span>
               </div>
             </div>
 
@@ -468,18 +470,18 @@ export default function TrainerPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-chrome">
-                          {session.branchName} • {session.zoneName ?? 'Main Zone'}
+                        <span className="text-[11px] font-semibold text-chrome">
+                          {session.branchName} · {session.zoneName ?? 'Main Zone'}
                         </span>
                         <h3 className="font-display mt-1 text-2xl font-bold uppercase">
                           {session.title}
                         </h3>
                         <p className="mt-1 flex items-center gap-1.5 text-xs text-silver">
-                          <Clock className="h-3.5 w-3.5 text-crimson" />
+                          <Clock className="h-3.5 w-3.5 text-crimson" strokeWidth={1.75} />
                           {new Date(session.startTime).toLocaleString()}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right tabular-nums">
                         <p className="font-display text-2xl font-extrabold">
                           {session.confirmedCount}/{session.maxCapacity}
                         </p>
@@ -491,17 +493,17 @@ export default function TrainerPage() {
                       <button
                         type="button"
                         onClick={() => openEditModal(session)}
-                        className="flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-steel bg-obsidian text-xs font-bold uppercase text-silver hover:border-crimson hover:text-chalk"
+                        className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-steel bg-obsidian text-xs font-bold uppercase text-silver hover:border-crimson hover:text-chalk"
                       >
-                        <Edit3 className="h-3.5 w-3.5" />
+                        <Edit3 className="h-3.5 w-3.5" strokeWidth={1.75} />
                         Edit
                       </button>
                       <button
                         type="button"
                         onClick={() => void handleDeleteSlotClick(session)}
-                        className="flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#FF2A3B]/50 bg-[#FF2A3B]/10 text-xs font-bold uppercase text-[#FF2A3B] hover:bg-[#FF2A3B]/20"
+                        className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#FF2A3B]/50 bg-[#FF2A3B]/10 text-xs font-bold uppercase text-[#FF2A3B] hover:bg-[#FF2A3B]/20"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
                         {session.confirmedCount > 0 ? 'Cancel Booked' : 'Delete'}
                       </button>
                     </div>
@@ -517,12 +519,12 @@ export default function TrainerPage() {
           <section className="va-card space-y-4 rounded-2xl p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-display text-2xl font-bold uppercase">
-                Live Class Roster & Check-In
+                Live Class Roster &amp; Check-In
               </h2>
               <select
                 value={rosterSession?.id ?? ''}
                 onChange={(e) => setSelectedRosterSessionId(e.target.value)}
-                className="min-h-[48px] rounded-xl border border-steel bg-obsidian px-3 text-xs font-bold text-chalk"
+                className="min-h-12 rounded-xl border border-steel bg-obsidian px-3 text-xs font-bold text-chalk"
               >
                 {sessions.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -534,7 +536,7 @@ export default function TrainerPage() {
 
             {rosterSession?.hasOutOfOrderEquipment ? (
               <div className="flex items-center gap-2 rounded-xl border border-[#FF2A3B] bg-[#FF2A3B]/15 p-3 text-xs font-bold text-[#FF2A3B]">
-                <AlertTriangle className="h-4 w-4" />
+                <AlertTriangle className="h-4 w-4" strokeWidth={1.75} />
                 Zone equipment reported OUT_OF_ORDER for {rosterSession.zoneName}.
               </div>
             ) : null}
@@ -550,24 +552,24 @@ export default function TrainerPage() {
                   return (
                     <div
                       key={att.bookingId}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-steel bg-obsidian/70 p-3.5"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-steel bg-obsidian p-3.5"
                     >
                       <div>
                         <p className="font-bold text-chalk">{att.fullName}</p>
                         <p className="text-xs text-chrome">
-                          {att.phone} • Status: {att.status}
+                          {att.phone} · Status: {att.status}
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => void handleAttendanceToggle(att.bookingId, att.status)}
-                        className={`flex min-h-[44px] items-center gap-1.5 rounded-xl px-4 text-xs font-bold uppercase ${
+                        className={`flex min-h-11 items-center gap-1.5 rounded-xl px-4 text-xs font-bold uppercase ${
                           attended
                             ? 'bg-emerald-600 text-white hover:bg-emerald-500'
                             : 'border border-steel bg-iron text-silver hover:border-emerald-500'
                         }`}
                       >
-                        <CheckCircle2 className="h-4 w-4" />
+                        <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
                         {attended ? 'Attended' : 'Mark Attended'}
                       </button>
                     </div>
@@ -582,10 +584,10 @@ export default function TrainerPage() {
         {activeTab === 'earnings' ? (
           <section className="grid gap-4 sm:grid-cols-3">
             <div className="va-card rounded-2xl p-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-chrome">
-                Published & Completed Slots
+              <p className="text-xs font-bold text-chrome">
+                Published &amp; Completed Slots
               </p>
-              <p className="font-display mt-2 text-4xl font-extrabold text-chalk">
+              <p className="font-display mt-2 text-4xl font-extrabold text-chalk tabular-nums">
                 {earningsStats.totalSlots}{' '}
                 <span className="text-lg text-chrome">
                   ({earningsStats.completedCount} done)
@@ -593,24 +595,27 @@ export default function TrainerPage() {
               </p>
             </div>
             <div className="va-card rounded-2xl p-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-chrome">
+              <p className="text-xs font-bold text-chrome">
                 Confirmed Client Bookings
               </p>
-              <p className="font-display mt-2 flex items-center gap-2 text-4xl font-extrabold text-amber-400">
-                <Users className="h-7 w-7" />
+              <p className="font-display mt-2 flex items-center gap-2 text-4xl font-extrabold text-amber-400 tabular-nums">
+                <Users className="h-7 w-7" strokeWidth={1.75} />
                 {earningsStats.totalAttendeeSpots}
               </p>
             </div>
-            <div className="va-card va-hero-gradient rounded-2xl p-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-silver">
-                Estimated Payout ({BUSINESS_RULES.DEFAULT_TRAINER_COMMISSION_PCT}% Split)
-              </p>
-              <p className="font-display mt-2 text-4xl font-extrabold text-emerald-400">
-                {formatBdt(earningsStats.commissionBdt)}
-              </p>
-              <p className="mt-1 text-xs text-chrome">
-                Gross Session Value: {formatBdt(earningsStats.grossEstimatedBdt)}
-              </p>
+            <div className="va-card overflow-hidden rounded-2xl">
+              <div className="va-led-rule w-full" />
+              <div className="p-5">
+                <p className="text-xs font-bold text-silver">
+                  Estimated Payout ({BUSINESS_RULES.DEFAULT_TRAINER_COMMISSION_PCT}% Split)
+                </p>
+                <p className="font-display mt-2 text-4xl font-extrabold text-emerald-400 tabular-nums">
+                  {formatBdt(earningsStats.commissionBdt)}
+                </p>
+                <p className="mt-1 text-xs text-chrome tabular-nums">
+                  Gross Session Value: {formatBdt(earningsStats.grossEstimatedBdt)}
+                </p>
+              </div>
             </div>
           </section>
         ) : null}
@@ -625,37 +630,37 @@ export default function TrainerPage() {
       >
         <form onSubmit={handleSaveSlot} className="space-y-3.5">
           <label className="block">
-            <span className="mb-1 block text-xs font-bold uppercase text-chrome">Session Title</span>
+            <span className="mb-1 block text-xs font-semibold text-chrome">Session Title</span>
             <input
               type="text"
               required
               minLength={3}
               value={slotTitle}
               onChange={(e) => setSlotTitle(e.target.value)}
-              className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-3.5 text-sm text-chalk"
+              className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-3.5 text-sm text-chalk"
             />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-chrome">Branch</span>
+              <span className="mb-1 block text-xs font-semibold text-chrome">Branch</span>
               <select
                 value={slotBranchId}
                 onChange={(e) => setSlotBranchId(e.target.value)}
-                className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-3 text-sm text-chalk"
+                className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-3 text-sm text-chalk"
               >
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.code} • {b.name}
+                    {b.code} · {b.name}
                   </option>
                 ))}
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-chrome">Type</span>
+              <span className="mb-1 block text-xs font-semibold text-chrome">Type</span>
               <select
                 value={slotType}
                 onChange={(e) => setSlotType(e.target.value as SessionType)}
-                className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-3 text-sm text-chalk"
+                className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-3 text-sm text-chalk"
               >
                 <option value={SessionType.PERSONAL_TRAINING}>1-on-1 PT</option>
                 <option value={SessionType.GROUP_CLASS}>Group Class</option>
@@ -663,16 +668,16 @@ export default function TrainerPage() {
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-chrome">Zone</span>
+              <span className="mb-1 block text-xs font-semibold text-chrome">Zone</span>
               <input
                 type="text"
                 value={slotZone}
                 onChange={(e) => setSlotZone(e.target.value)}
-                className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-3.5 text-sm text-chalk"
+                className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-3.5 text-sm text-chalk"
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-chrome">
+              <span className="mb-1 block text-xs font-semibold text-chrome">
                 Max Capacity
               </span>
               <input
@@ -682,34 +687,34 @@ export default function TrainerPage() {
                 required
                 value={slotCapacity}
                 onChange={(e) => setSlotCapacity(e.target.value)}
-                className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-3.5 text-sm font-bold text-chalk"
+                className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-3.5 text-sm font-bold text-chalk"
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-chrome">Start Time</span>
+              <span className="mb-1 block text-xs font-semibold text-chrome">Start Time</span>
               <input
                 type="datetime-local"
                 required
                 value={slotStart}
                 onChange={(e) => setSlotStart(e.target.value)}
-                className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-3 text-xs text-chalk"
+                className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-3 text-xs text-chalk"
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-chrome">End Time</span>
+              <span className="mb-1 block text-xs font-semibold text-chrome">End Time</span>
               <input
                 type="datetime-local"
                 required
                 value={slotEnd}
                 onChange={(e) => setSlotEnd(e.target.value)}
-                className="min-h-[48px] w-full rounded-xl border border-steel bg-obsidian px-3 text-xs text-chalk"
+                className="min-h-12 w-full rounded-xl border border-steel bg-obsidian px-3 text-xs text-chalk"
               />
             </label>
           </div>
           <button
             type="submit"
             disabled={submitting}
-            className="flex min-h-[48px] w-full items-center justify-center rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
           >
             {submitting ? 'Saving...' : editingSession ? 'Update Slot' : 'Create Slot'}
           </button>
@@ -729,7 +734,7 @@ export default function TrainerPage() {
       >
         <form onSubmit={handleConfirmBookedCancel} className="space-y-4">
           <label className="block">
-            <span className="mb-1.5 block text-xs font-bold uppercase text-chrome">
+            <span className="mb-1.5 block text-xs font-semibold text-chrome">
               Mandatory Cancellation Reason (Min 5 Chars) *
             </span>
             <textarea
@@ -745,9 +750,9 @@ export default function TrainerPage() {
           <button
             type="submit"
             disabled={submitting || cancelReason.trim().length < 5}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#FF2A3B] text-sm font-bold uppercase text-white hover:bg-red-600 disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#FF2A3B] text-sm font-bold uppercase text-white hover:bg-red-600 disabled:opacity-50"
           >
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4" strokeWidth={1.75} />
             {submitting ? 'Cancelling...' : 'Confirm Cancel & Refund Credits'}
           </button>
         </form>

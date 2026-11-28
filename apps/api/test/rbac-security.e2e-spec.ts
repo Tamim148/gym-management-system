@@ -131,4 +131,27 @@ describe('RBAC, Cross-Branch Isolation, Upload Fuzz & Prompt Injection Security 
     expect(after.transaction).toBe(before.transaction);
     expect(after.auditLog).toBe(before.auditLog);
   });
+
+  it('rejects mass-assignment fields and invalid phones on POST /api/leads/free-pass with 400 Bad Request', async () => {
+    await request(app.getHttpServer())
+      .post('/api/leads/free-pass')
+      .send({
+        fullName: 'Test Lead',
+        phone: '+8801712345678',
+        branchId: SEED_IDS.branchGulshan,
+        preferredVisitWindow: 'MORNING',
+        role: 'SUPER_ADMIN',
+      })
+      .expect(400);
+
+    await request(app.getHttpServer())
+      .post('/api/leads/free-pass')
+      .send({
+        fullName: 'Test Lead',
+        phone: '01712345678',
+        branchId: SEED_IDS.branchGulshan,
+        preferredVisitWindow: 'EVENING',
+      })
+      .expect(400);
+  });
 });

@@ -6,8 +6,10 @@ import {
   AlertTriangle,
   Banknote,
   CheckCircle2,
+  ChevronRight,
   CreditCard,
   Lock,
+  Radio,
   RefreshCw,
   Search,
   ShieldAlert,
@@ -453,7 +455,7 @@ export default function DeskPage() {
           <button
             type="button"
             onClick={() => setWalkInOpen(true)}
-            className="flex min-h-[48px] items-center gap-2 rounded-xl bg-crimson px-4 text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
+            className="flex min-h-12 items-center gap-2 rounded-xl bg-crimson px-4 text-xs font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover"
           >
             <UserPlus className="h-4 w-4" />
             Quick Walk-In Onboard
@@ -471,7 +473,7 @@ export default function DeskPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Quick-search member by name, phone, email, or RFID UID (e.g. Tariq, VA-RFID-8841)..."
-              className={`min-h-[48px] w-full rounded-xl border pr-4 pl-11 text-sm outline-none focus:border-crimson ${
+              className={`min-h-12 w-full rounded-xl border pr-4 pl-11 text-sm outline-none focus:border-crimson ${
                 lightMode
                   ? 'border-zinc-300 bg-zinc-50 text-zinc-900'
                   : 'border-steel bg-obsidian text-chalk'
@@ -481,7 +483,7 @@ export default function DeskPage() {
           <button
             type="button"
             onClick={() => activeBranch && void loadWorkspaceData(activeBranch.id)}
-            className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl border px-4 text-xs font-bold uppercase tracking-wider ${
+            className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-bold uppercase tracking-wider ${
               lightMode
                 ? 'border-zinc-200 bg-zinc-50 text-zinc-800 hover:bg-zinc-100'
                 : 'border-steel bg-obsidian text-silver hover:text-chalk'
@@ -523,11 +525,11 @@ export default function DeskPage() {
                 Live Turnstile Entry Stream
               </h2>
               <p className={`text-xs ${lightMode ? 'text-zinc-500' : 'text-chrome'}`}>
-                Denied scans pin to the top with pulsing alert border & chime. Click any card to inspect.
+                Denied scans pin to the top with high-contrast alert border &amp; chime. Click any row to inspect.
               </p>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-500">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+              <Radio className="h-3.5 w-3.5" strokeWidth={1.75} />
               Socket.IO Live
             </span>
           </div>
@@ -547,19 +549,21 @@ export default function DeskPage() {
                     key={log.id}
                     type="button"
                     onClick={() => log.userId && void loadQuickProfile(log.userId)}
-                    className={`flex min-h-[80px] w-full items-center justify-between gap-4 rounded-xl border-2 p-4 text-left transition-all ${
+                    className={`flex min-h-[80px] w-full items-center justify-between gap-4 rounded-xl border p-4 text-left transition-colors ${
                       denied
-                        ? 'animate-pulse border-[#FF2A3B] bg-[#FF2A3B]/10 shadow-lg shadow-[#FF2A3B]/15'
+                        ? lightMode
+                          ? 'border-2 border-[#FF2A3B] bg-red-50 hover:bg-red-100/70'
+                          : 'border-2 border-[#FF2A3B] bg-[#FF2A3B]/10 hover:bg-[#FF2A3B]/15'
                         : override
-                          ? 'border-l-4 border-amber-500 bg-amber-500/5'
+                          ? 'border-amber-500/50 border-l-4 border-l-amber-500 bg-amber-500/5'
                           : lightMode
-                            ? 'border-zinc-200 border-l-4 border-l-emerald-500 bg-zinc-50/70 hover:bg-zinc-100'
-                            : 'border-steel border-l-4 border-l-emerald-500 bg-obsidian/80 hover:bg-obsidian'
+                            ? 'border-zinc-200 border-l-4 border-l-emerald-500 bg-zinc-50 hover:bg-zinc-100'
+                            : 'border-steel border-l-4 border-l-emerald-500 bg-obsidian hover:bg-obsidian/80'
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-3.5">
                       <div
-                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-display text-lg font-extrabold ${
+                        className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-display text-lg font-extrabold ${
                           denied
                             ? 'bg-[#FF2A3B] text-white'
                             : override
@@ -568,11 +572,20 @@ export default function DeskPage() {
                         }`}
                       >
                         {denied ? (
-                          <Lock className="h-6 w-6" />
+                          <>
+                            <Lock className="h-6 w-6" strokeWidth={1.75} />
+                            <span
+                              aria-hidden="true"
+                              className="absolute -top-1 -right-1 flex h-3 w-3"
+                            >
+                              <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF2A3B] opacity-75" />
+                              <span className="relative inline-flex h-3 w-3 rounded-full border border-white bg-[#FF2A3B]" />
+                            </span>
+                          </>
                         ) : override ? (
-                          <ShieldAlert className="h-6 w-6" />
+                          <ShieldAlert className="h-6 w-6" strokeWidth={1.75} />
                         ) : (
-                          <CheckCircle2 className="h-6 w-6" />
+                          <CheckCircle2 className="h-6 w-6" strokeWidth={1.75} />
                         )}
                       </div>
                       <div className="min-w-0">
@@ -582,16 +595,16 @@ export default function DeskPage() {
                           </span>
                           <EntryStatusBadge status={log.entryStatus} />
                         </div>
-                        <p className={`mt-0.5 truncate text-xs ${lightMode ? 'text-zinc-600' : 'text-chrome'}`}>
+                        <p className={`mt-0.5 truncate text-xs tabular-nums ${lightMode ? 'text-zinc-600' : 'text-chrome'}`}>
                           {log.reason || log.overrideReason || log.planName || 'Turnstile verification'}
                           {log.dueAmountBdt && log.dueAmountBdt > 0
-                            ? ` • Balance Due: ${formatBdt(log.dueAmountBdt)}`
+                            ? ` · Balance Due: ${formatBdt(log.dueAmountBdt)}`
                             : ''}
                         </p>
                       </div>
                     </div>
 
-                    <div className="shrink-0 text-right">
+                    <div className="shrink-0 text-right tabular-nums">
                       <p className="font-mono text-xs font-semibold">
                         {new Date(log.scannedAt).toLocaleTimeString([], {
                           hour: '2-digit',
@@ -599,8 +612,9 @@ export default function DeskPage() {
                           second: '2-digit',
                         })}
                       </p>
-                      <p className={`text-[11px] ${lightMode ? 'text-zinc-500' : 'text-chrome'}`}>
-                        Inspect →
+                      <p className={`mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold ${lightMode ? 'text-zinc-500' : 'text-chrome'}`}>
+                        Inspect
+                        <ChevronRight className="h-3.5 w-3.5" strokeWidth={1.75} />
                       </p>
                     </div>
                   </button>
@@ -709,7 +723,7 @@ export default function DeskPage() {
                       setCheckoutPlanModalOpen(true);
                     }
                   }}
-                  className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-emerald-500"
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-emerald-500"
                 >
                   <Banknote className="h-5 w-5" />
                   {selectedProfile.subscription && selectedProfile.subscription.dueAmountBdt > 0
@@ -720,7 +734,7 @@ export default function DeskPage() {
                 <button
                   type="button"
                   onClick={() => setOverrideOpen(true)}
-                  className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-500/10 px-4 text-sm font-bold uppercase tracking-wider text-amber-500 transition-colors hover:bg-amber-500/20"
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-500/10 px-4 text-sm font-bold uppercase tracking-wider text-amber-500 transition-colors hover:bg-amber-500/20"
                 >
                   <ShieldAlert className="h-5 w-5" />
                   Manual Override
@@ -729,7 +743,7 @@ export default function DeskPage() {
                 <button
                   type="button"
                   onClick={() => setReplaceOpen(true)}
-                  className={`flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold uppercase tracking-wider transition-colors ${
+                  className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold uppercase tracking-wider transition-colors ${
                     lightMode
                       ? 'border-zinc-300 bg-zinc-100 text-zinc-800 hover:bg-zinc-200'
                       : 'border-steel bg-obsidian text-silver hover:text-chalk'
@@ -795,7 +809,7 @@ export default function DeskPage() {
               min={1}
               value={settleAmount}
               onChange={(e) => setSettleAmount(e.target.value)}
-              className={`min-h-[48px] w-full rounded-xl border px-3.5 text-base font-bold outline-none focus:border-crimson ${
+              className={`min-h-12 w-full rounded-xl border px-3.5 text-base font-bold outline-none focus:border-crimson ${
                 lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
               }`}
             />
@@ -807,7 +821,7 @@ export default function DeskPage() {
             <select
               value={settleMethod}
               onChange={(e) => setSettleMethod(e.target.value as SettleDueDto['paymentMethod'])}
-              className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm outline-none focus:border-crimson ${
+              className={`min-h-12 w-full rounded-xl border px-3.5 text-sm outline-none focus:border-crimson ${
                 lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
               }`}
             >
@@ -821,7 +835,7 @@ export default function DeskPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold uppercase tracking-wider text-white hover:bg-emerald-500 disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold uppercase tracking-wider text-white hover:bg-emerald-500 disabled:opacity-50"
           >
             <UserCheck className="h-5 w-5" />
             {submitting ? 'Recording...' : 'Confirm Due Settlement'}
@@ -847,7 +861,7 @@ export default function DeskPage() {
                 type="text"
                 readOnly
                 value={activeBranch ? `${activeBranch.code} • ${activeBranch.name}` : ''}
-                className={`min-h-[44px] w-full rounded-xl border px-3 text-xs font-semibold opacity-80 ${
+                className={`min-h-11 w-full rounded-xl border px-3 text-xs font-semibold opacity-80 ${
                   lightMode ? 'border-zinc-200 bg-zinc-100' : 'border-steel bg-obsidian text-silver'
                 }`}
               />
@@ -860,7 +874,7 @@ export default function DeskPage() {
                 type="text"
                 readOnly
                 value={new Date().toLocaleString()}
-                className={`min-h-[44px] w-full rounded-xl border px-3 text-xs font-semibold opacity-80 ${
+                className={`min-h-11 w-full rounded-xl border px-3 text-xs font-semibold opacity-80 ${
                   lightMode ? 'border-zinc-200 bg-zinc-100' : 'border-steel bg-obsidian text-silver'
                 }`}
               />
@@ -874,7 +888,7 @@ export default function DeskPage() {
             <select
               value={overrideReason}
               onChange={(e) => setOverrideReason(e.target.value as ManualOverrideDto['reason'])}
-              className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm outline-none focus:border-crimson ${
+              className={`min-h-12 w-full rounded-xl border px-3.5 text-sm outline-none focus:border-crimson ${
                 lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
               }`}
             >
@@ -905,7 +919,7 @@ export default function DeskPage() {
           <button
             type="submit"
             disabled={submitting || overrideNotes.trim().length < BUSINESS_RULES.MIN_OVERRIDE_NOTE_LENGTH}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-amber-500 text-sm font-bold uppercase tracking-wider text-zinc-950 hover:bg-amber-400 disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-500 text-sm font-bold uppercase tracking-wider text-zinc-950 hover:bg-amber-400 disabled:opacity-50"
           >
             <AlertTriangle className="h-5 w-5" />
             {submitting ? 'Unlocking Gate...' : 'Confirm Override & Unlock Gate'}
@@ -933,7 +947,7 @@ export default function DeskPage() {
               value={newCardUid}
               onChange={(e) => setNewCardUid(e.target.value.toUpperCase())}
               placeholder="VA-RFID-9012"
-              className={`min-h-[48px] w-full rounded-xl border px-3.5 font-mono text-sm uppercase outline-none focus:border-crimson ${
+              className={`min-h-12 w-full rounded-xl border px-3.5 font-mono text-sm uppercase outline-none focus:border-crimson ${
                 lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
               }`}
             />
@@ -944,7 +958,7 @@ export default function DeskPage() {
               <select
                 value={replaceReason}
                 onChange={(e) => setReplaceReason(e.target.value as 'LOST' | 'DAMAGED')}
-                className={`min-h-[48px] w-full rounded-xl border px-3 text-sm ${
+                className={`min-h-12 w-full rounded-xl border px-3 text-sm ${
                   lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                 }`}
               >
@@ -961,7 +975,7 @@ export default function DeskPage() {
                 onChange={(e) =>
                   setReplaceMethod(e.target.value as ReplaceCardDto['paymentMethod'])
                 }
-                className={`min-h-[48px] w-full rounded-xl border px-3 text-sm ${
+                className={`min-h-12 w-full rounded-xl border px-3 text-sm ${
                   lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                 }`}
               >
@@ -975,7 +989,7 @@ export default function DeskPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
           >
             <CreditCard className="h-5 w-5" />
             {submitting ? 'Replacing...' : `Issue New Card (${BUSINESS_RULES.CARD_REPLACEMENT_FEE_BDT} BDT)`}
@@ -1001,7 +1015,7 @@ export default function DeskPage() {
               value={walkInName}
               onChange={(e) => setWalkInName(e.target.value)}
               placeholder="Tanvir Ahmed"
-              className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm ${
+              className={`min-h-12 w-full rounded-xl border px-3.5 text-sm ${
                 lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
               }`}
             />
@@ -1015,7 +1029,7 @@ export default function DeskPage() {
                 minLength={10}
                 value={walkInPhone}
                 onChange={(e) => setWalkInPhone(e.target.value)}
-                className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm ${
+                className={`min-h-12 w-full rounded-xl border px-3.5 text-sm ${
                   lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                 }`}
               />
@@ -1026,7 +1040,7 @@ export default function DeskPage() {
                 type="email"
                 value={walkInEmail}
                 onChange={(e) => setWalkInEmail(e.target.value)}
-                className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm ${
+                className={`min-h-12 w-full rounded-xl border px-3.5 text-sm ${
                   lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                 }`}
               />
@@ -1041,7 +1055,7 @@ export default function DeskPage() {
                 type="text"
                 value={walkInEmergency}
                 onChange={(e) => setWalkInEmergency(e.target.value)}
-                className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm ${
+                className={`min-h-12 w-full rounded-xl border px-3.5 text-sm ${
                   lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                 }`}
               />
@@ -1055,7 +1069,7 @@ export default function DeskPage() {
                 value={walkInCardUid}
                 onChange={(e) => setWalkInCardUid(e.target.value.toUpperCase())}
                 placeholder="VA-RFID-9910"
-                className={`min-h-[48px] w-full rounded-xl border px-3.5 font-mono text-sm uppercase ${
+                className={`min-h-12 w-full rounded-xl border px-3.5 font-mono text-sm uppercase ${
                   lightMode ? 'border-zinc-300 bg-white' : 'border-steel bg-obsidian text-chalk'
                 }`}
               />
@@ -1064,7 +1078,7 @@ export default function DeskPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold uppercase tracking-wider text-chalk hover:bg-crimson-hover disabled:opacity-50"
           >
             <UserPlus className="h-5 w-5" />
             {submitting ? 'Onboarding...' : 'Create Walk-In Member'}

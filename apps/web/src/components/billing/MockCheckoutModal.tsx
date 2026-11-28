@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Image from 'next/image';
 import {
   AlertTriangle,
   Banknote,
@@ -21,6 +20,7 @@ import {
 import { ApiError, apiPost } from '@/lib/api';
 import { formatBdt } from '@/lib/dal';
 import type { MembershipPlanItem } from '@/lib/types';
+import { BrandCrest } from '@/components/ui/BrandCrest';
 import { Modal } from '@/components/ui/Modal';
 
 interface MockCheckoutModalProps {
@@ -46,28 +46,28 @@ const GATEWAY_TABS: Array<{
     id: 'BKASH',
     label: 'bKash',
     method: PaymentMethod.MOCK_BKASH,
-    accent: 'border-[#E2136E] bg-[#E2136E]/15 text-[#FF5CA0]',
-    hint: '017XXXXXXXX • Mock OTP 1234',
+    accent: 'border-[#E2136E] bg-[#E2136E]/15 text-[#E2136E]',
+    hint: '017XXXXXXXX · Mock OTP 1234',
   },
   {
     id: 'NAGAD',
     label: 'Nagad',
     method: PaymentMethod.MOCK_NAGAD,
-    accent: 'border-[#F7941D] bg-[#F7941D]/15 text-[#FFB357]',
-    hint: '018XXXXXXXX • Mock PIN 1234',
+    accent: 'border-[#F7941D] bg-[#F7941D]/15 text-[#F59E0B]',
+    hint: '018XXXXXXXX · Mock PIN 1234',
   },
   {
     id: 'CARD',
     label: 'Card',
     method: PaymentMethod.MOCK_CARD,
-    accent: 'border-sky-500 bg-sky-500/15 text-sky-400',
+    accent: 'border-crimson bg-crimson/15 text-crimson',
     hint: 'Visa / Mastercard / NexusPay',
   },
   {
     id: 'CASH',
     label: 'Cash',
     method: PaymentMethod.CASH,
-    accent: 'border-emerald-500 bg-emerald-500/15 text-emerald-400',
+    accent: 'border-emerald-500 bg-emerald-500/15 text-emerald-500',
     hint: 'Reception Cash Drawer Receipt',
   },
 ];
@@ -173,7 +173,7 @@ export function MockCheckoutModal({
 
       setStatusLog({
         type: 'success',
-        message: `Payment CLEARED! Invoice ${checkoutRes.invoiceNumber} • Paid ${formatBdt(checkoutRes.amountBdt)}.`,
+        message: `Payment CLEARED! Invoice ${checkoutRes.invoiceNumber} · Paid ${formatBdt(checkoutRes.amountBdt)}.`,
       });
       onSuccess?.(checkoutRes);
     } catch (err) {
@@ -190,28 +190,23 @@ export function MockCheckoutModal({
       open={open}
       onClose={onClose}
       title="Bangladesh Mock Checkout"
-      subtitle={`$0 Sandbox Gateway • ${plan.name}${targetUserName ? ` • ${targetUserName}` : ''}`}
+      subtitle={`Sandbox Gateway · ${plan.name}${targetUserName ? ` · ${targetUserName}` : ''}`}
       maxWidthClass="max-w-xl"
       lightMode={lightMode}
     >
       <div className="space-y-5">
         {/* Summary Strip */}
-        <div className="rounded-xl border border-steel bg-gradient-to-r from-oxblood/40 via-iron to-obsidian p-4 text-chalk">
-          <div className="flex items-center justify-between gap-3">
+        <div className="overflow-hidden rounded-xl border border-steel bg-obsidian text-chalk">
+          <div className="va-led-rule w-full" />
+          <div className="flex items-center justify-between gap-3 p-4">
             <div className="flex items-center gap-3">
-              <Image
-                src="/images/logo.png"
-                alt="VA Crest"
-                width={38}
-                height={38}
-                className="rounded-full border border-chrome/40"
-              />
+              <BrandCrest size={38} />
               <div>
-                <p className="text-xs uppercase tracking-widest text-chrome">Selected Plan</p>
+                <p className="text-xs font-medium text-chrome">Selected Plan</p>
                 <p className="font-display text-xl font-bold uppercase">{plan.name}</p>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right tabular-nums">
               {estimatedPricing.discount > 0 ? (
                 <p className="text-xs text-chrome line-through">
                   {formatBdt(estimatedPricing.base)}
@@ -226,7 +221,7 @@ export function MockCheckoutModal({
 
         {/* Gateway Tabs */}
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-chrome">
+          <p className="mb-2 text-xs font-bold text-chrome">
             Select Payment Channel
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -237,7 +232,7 @@ export function MockCheckoutModal({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition-all ${
+                  className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition-colors ${
                     active
                       ? tab.accent
                       : lightMode
@@ -246,11 +241,11 @@ export function MockCheckoutModal({
                   }`}
                 >
                   {tab.id === 'CARD' ? (
-                    <CreditCard className="h-4 w-4" />
+                    <CreditCard className="h-4 w-4" strokeWidth={1.75} />
                   ) : tab.id === 'CASH' ? (
-                    <Banknote className="h-4 w-4" />
+                    <Banknote className="h-4 w-4" strokeWidth={1.75} />
                   ) : (
-                    <Smartphone className="h-4 w-4" />
+                    <Smartphone className="h-4 w-4" strokeWidth={1.75} />
                   )}
                   {tab.label}
                 </button>
@@ -262,7 +257,7 @@ export function MockCheckoutModal({
         {/* Wallet / Reference Field */}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-chrome">
+            <span className="mb-1.5 block text-xs font-semibold text-chrome">
               {activeTab === 'CARD'
                 ? 'Mock Card Last 4 / Reference'
                 : activeTab === 'CASH'
@@ -274,7 +269,7 @@ export function MockCheckoutModal({
               value={walletAccount}
               onChange={(e) => setWalletAccount(e.target.value)}
               placeholder={selectedGateway.hint}
-              className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm outline-none focus:border-crimson ${
+              className={`min-h-12 w-full rounded-xl border px-3.5 text-sm outline-none focus:border-crimson ${
                 lightMode
                   ? 'border-zinc-300 bg-white text-zinc-900'
                   : 'border-steel bg-obsidian text-chalk'
@@ -285,8 +280,8 @@ export function MockCheckoutModal({
           {/* Promo Code */}
           <div>
             <label className="block">
-              <span className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-chrome">
-                <Tag className="h-3.5 w-3.5 text-amber-500" />
+              <span className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-chrome">
+                <Tag className="h-3.5 w-3.5 text-amber-500" strokeWidth={1.75} />
                 Festival Promo Code
               </span>
               <input
@@ -294,7 +289,7 @@ export function MockCheckoutModal({
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 placeholder="EID20 or WINTER500"
-                className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm font-semibold uppercase outline-none focus:border-crimson ${
+                className={`min-h-12 w-full rounded-xl border px-3.5 text-sm font-semibold uppercase outline-none focus:border-crimson ${
                   lightMode
                     ? 'border-zinc-300 bg-white text-zinc-900'
                     : 'border-steel bg-obsidian text-chalk'
@@ -319,7 +314,7 @@ export function MockCheckoutModal({
         {/* Split / Partial Payment Option */}
         <div
           className={`rounded-xl border p-3.5 ${
-            lightMode ? 'border-zinc-200 bg-zinc-50' : 'border-steel bg-obsidian/70'
+            lightMode ? 'border-zinc-200 bg-zinc-50' : 'border-steel bg-obsidian'
           }`}
         >
           <label className="flex min-h-[40px] cursor-pointer items-center justify-between gap-3">
@@ -354,7 +349,7 @@ export function MockCheckoutModal({
                   max={estimatedPricing.total}
                   value={partialAmount}
                   onChange={(e) => setPartialAmount(e.target.value)}
-                  className={`min-h-[48px] w-full rounded-xl border px-3.5 text-sm font-bold outline-none focus:border-crimson ${
+                  className={`min-h-12 w-full rounded-xl border px-3.5 text-sm font-bold outline-none focus:border-crimson ${
                     lightMode
                       ? 'border-zinc-300 bg-white text-zinc-900'
                       : 'border-steel bg-iron text-chalk'
@@ -371,16 +366,16 @@ export function MockCheckoutModal({
             role="status"
             className={`flex items-start gap-2.5 rounded-xl border p-3.5 text-xs font-medium ${
               statusLog.type === 'success'
-                ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-400'
+                ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-500'
                 : statusLog.type === 'error'
                   ? 'border-[#FF2A3B]/50 bg-[#FF2A3B]/15 text-[#FF2A3B]'
-                  : 'border-amber-500/40 bg-amber-500/15 text-amber-400'
+                  : 'border-amber-500/40 bg-amber-500/15 text-amber-500'
             }`}
           >
             {statusLog.type === 'success' ? (
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
             ) : (
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
             )}
             <span>{statusLog.message}</span>
           </div>
@@ -392,9 +387,9 @@ export function MockCheckoutModal({
             type="button"
             disabled={submittingMode !== null}
             onClick={() => handleCheckout('SUCCESS')}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-crimson px-4 py-3 text-sm font-bold uppercase tracking-wider text-chalk shadow-lg shadow-crimson/25 transition-colors hover:bg-crimson-hover disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-crimson px-4 py-3 text-sm font-bold uppercase tracking-wider text-chalk transition-colors hover:bg-crimson-hover disabled:opacity-50"
           >
-            <ShieldCheck className="h-5 w-5" />
+            <ShieldCheck className="h-5 w-5" strokeWidth={1.75} />
             {submittingMode === 'SUCCESS' ? 'Processing...' : 'Simulate Success'}
           </button>
 
@@ -403,13 +398,13 @@ export function MockCheckoutModal({
               type="button"
               disabled={submittingMode !== null}
               onClick={() => handleCheckout('FAIL')}
-              className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 ${
+              className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 ${
                 lightMode
                   ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
                   : 'border-[#FF2A3B]/50 bg-[#FF2A3B]/10 text-[#FF2A3B] hover:bg-[#FF2A3B]/20'
               }`}
             >
-              <AlertTriangle className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" strokeWidth={1.75} />
               {submittingMode === 'FAIL' ? 'Simulating...' : 'Simulate Failed Payment'}
             </button>
 
@@ -417,9 +412,9 @@ export function MockCheckoutModal({
               type="button"
               disabled={submittingMode !== null}
               onClick={() => handleCheckout('BROWSER_DROP')}
-              className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-amber-500/50 bg-amber-500/15 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-amber-500 transition-colors hover:bg-amber-500/25 disabled:opacity-50"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-amber-500/50 bg-amber-500/15 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-amber-500 transition-colors hover:bg-amber-500/25 disabled:opacity-50"
             >
-              <WifiOff className="h-4 w-4" />
+              <WifiOff className="h-4 w-4" strokeWidth={1.75} />
               {submittingMode === 'BROWSER_DROP'
                 ? 'Firing IPN...'
                 : 'Simulate Browser Drop (IPN Test)'}
